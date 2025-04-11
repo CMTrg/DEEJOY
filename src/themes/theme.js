@@ -4,7 +4,7 @@ export const lightTheme = createTheme({
     palette: {
       mode: 'light',
       primary: {
-        main: '#007aff',
+        main: '#5BF9FC',
       },
       background: {
         default: '#8FD7FF',
@@ -26,6 +26,7 @@ export const lightTheme = createTheme({
               fontFamily: 'Outfit',
               textTransform: 'none',
               width: '80px',
+              fontSize: '1rem',
             },
           },
         },
@@ -42,7 +43,7 @@ export const lightTheme = createTheme({
     palette: {
       mode: 'dark',
       primary: {
-        main: '#007aff',
+        main: '#982399',
       },
       background: {
         default: '#150158',
@@ -55,7 +56,18 @@ export const lightTheme = createTheme({
         primary: '#FFFFFF',
       }
     },
-   
+    components: {
+        MuiButton: {
+          styleOverrides: {
+            root: {
+              fontFamily: 'Outfit',
+              textTransform: 'none',
+              minWidth: '75px',
+              fontSize: '1rem',
+            },
+          },
+        },
+      },
     customBackground: {
         mesh: true,
     }
