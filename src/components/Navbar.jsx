@@ -38,7 +38,7 @@ export default function Navbar() {
           fontWeight="bold"
           color="text.primary"
           sx={{
-            paddingLeft: "0.5%",
+            ml: "2.5%",
             fontFamily: "'Outfit', sans-serif",
             letterSpacing: "0.2rem",
           }}
