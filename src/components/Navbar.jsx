@@ -7,13 +7,20 @@ import {
   Button,
   useTheme,
   Avatar,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import ThemeModeSelect from "../ThemeModeContext";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 export default function Navbar() {
   const theme = useTheme();
+  const [open, setOpen] = useState(false);
 
   return (
     <AppBar
@@ -38,13 +45,14 @@ export default function Navbar() {
           variant="h5"
           fontWeight="bold"
           color="text.primary"
-          component={Link} to="/"
+          component={Link}
+          to="/"
           sx={{
             ml: "2.5%",
             fontFamily: "'Outfit', sans-serif",
             letterSpacing: "0.2rem",
-            cursor: 'pointer',
-            textDecoration: 'none',
+            cursor: "pointer",
+            textDecoration: "none",
           }}
         >
           DEEJOY
@@ -59,23 +67,31 @@ export default function Navbar() {
           }}
         >
           <Box sx={{ display: { xs: "none", sm: "flex" }, gap: "10px" }}>
-            <Button component={Link} to="/" sx={{ color: "text.primary" }}>Home</Button>
-            <Button component={Link} to="/favourite" sx={{ color: "text.primary" }}>Favourite</Button>
+            <Button component={Link} to="/" sx={{ color: "text.primary" }}>
+              Home
+            </Button>
+            <Button
+              component={Link}
+              to="/favourite"
+              sx={{ color: "text.primary" }}
+            >
+              Favourite
+            </Button>
             <Button sx={{ color: "text.primary" }}>Blog</Button>
             <Button sx={{ color: "text.primary" }}>About</Button>
           </Box>
 
           <ThemeModeSelect />
           <Avatar
-            src="" 
+            src=""
             alt="User Avatar"
             sx={{
               width: 32,
               height: 32,
-              bgcolor: 'beige',
+              bgcolor: "beige",
               fontSize: 14,
               fontWeight: "bold",
-              cursor: 'pointer',
+              cursor: "pointer",
             }}
           >
             U
@@ -83,13 +99,45 @@ export default function Navbar() {
 
           <IconButton
             edge="end"
+            onClick={() => setOpen(true)}
             sx={{
-              display: { xs: "block", sm: "none" },
+              display: { xs: "flex", sm: "none" },
               color: "text.primary",
             }}
           >
             <MenuIcon />
           </IconButton>
+          <Drawer
+            anchor="right"
+            open={open}
+            onClose={() => setOpen(false)}
+            PaperProps={{
+              sx: {
+                backgroundColor: theme.palette.background.default,
+                color: theme.palette.text.primary,
+                width: 200,
+              },
+            }}
+          >
+            <List>
+              {[
+                { text: "Home", path: "/" },
+                { text: "Favourite", path: "/favourite" },
+                { text: "Blog", path: "/" },
+                { text: "About", path: "/" },
+              ].map(({ text, path }) => (
+                <ListItem key={text} disablePadding>
+                  <ListItemButton
+                    component={Link}
+                    to={path}
+                    onClick={() => setOpen(false)}
+                  >
+                    <ListItemText primary={text} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Drawer>
         </Box>
       </Toolbar>
     </AppBar>
