@@ -41,6 +41,7 @@ export default function Navbar() {
             ml: "2.5%",
             fontFamily: "'Outfit', sans-serif",
             letterSpacing: "0.2rem",
+            cursor: 'pointer',
           }}
         >
           DEEJOY

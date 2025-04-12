@@ -4,4 +4,7 @@ body {
     font-family: 'Outfit', sans-serif;
   }
 
- 
+  html {
+    overscroll-behavior: none; /* ngăn nhún bounce khi chạm biên */
+    overflow-x: hidden;        /* tránh bị lệch chiều ngang */
+  }

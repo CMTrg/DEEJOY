@@ -4,6 +4,11 @@ export const lightTheme = createTheme({
     mode: "light",
     primary: {
       main: "#A2A8FF",
+      text: "#4e4f50",
+      texthover: '#ffffff'
+    },
+    secondary: {
+        main: "rgba(223,163,255,50%)"
     },
     background: {
       default: "#8FD7FF",
@@ -83,6 +88,11 @@ export const darkTheme = createTheme({
     mode: "dark",
     primary: {
       main: "#982399",
+      text: "#6B27F8",
+      texthover: '#65676b'
+    },
+    secondary: {
+        main: "#DFA3FF"
     },
     background: {
       default: "#150158",
