@@ -1,62 +1,30 @@
 import { Box, Typography, Pagination } from "@mui/material";
-import Navbar from "../../components/Navbar.jsx";
-import AnimatedBackground from "../../components/AnimatedBackground.jsx";
-import SearchBar from "./components/SearchBar.jsx";
-import CategoryFilters from "./components/CategoryFilters.jsx";
-import PlaceCard from "../../components/PlaceCard.jsx";
-import Footer from "../../components/Footer.jsx";
-export default function Home() {
-  return (
-    <Box>
-      <AnimatedBackground />
-      <Navbar />
-      <Box sx={{
-        position: 'relative' //Box này chứa Overlay -> set relative để box dưới absolute theo
-      }}>
-        <Box    //Box này chứa ảnh
-        sx={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: "url('/herobg.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          mixBlendMode: "overlay",
-          opacity: 0.75,
-          zIndex: 1,
-          mt: "58px",
-          height: { xs: "250px", sm: "35vh" },
-        }}
-      />
+import Navbar from "../components/Navbar";
+import AnimatedBackground from "../components/AnimatedBackground.jsx";
+import PlaceCard from "../components/PlaceCard.jsx";
+import Footer from "../components/Footer.jsx";
+import { useEffect } from "react";
 
-      <Box //Box này chứa content overlay lên
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Box
+
+
+export default function Favourite() {
+  return (
+    useEffect(() => {
+        const target = document.getElementById("favourite-section");
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth" });
+        }
+      }, []), 
+
+    <Box  sx={{ mt: "80px"}}>
+        <Navbar></Navbar>
+        <AnimatedBackground></AnimatedBackground>
+          {/*contain title and card */}
+          <Box
+          id='favourite-section'
+          
           sx={{
-            position: "relative",
-            zIndex: 2,
-            mt: "58px",
-            height: { xs: "250px", sm: "35vh" },
-            width: "100%",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <SearchBar></SearchBar>
-          <CategoryFilters></CategoryFilters>
-        </Box>
-      </Box>
-      
-        {/*contain title and card */}
-        <Box
-          sx={{
+            scrollMarginTop: '70px',
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -76,7 +44,7 @@ export default function Home() {
               mt: "1rem",
             }}
           >
-            RANDOM
+            FAVOURITE
           </Typography>
           <Box
             sx={{
@@ -176,8 +144,7 @@ export default function Home() {
             mt: 2,
          }}></Pagination>
         </Box>
-      </Box>
-      <Footer></Footer>
+        <Footer></Footer>
     </Box>
   );
 }

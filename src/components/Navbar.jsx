@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import ThemeModeSelect from "../ThemeModeContext";
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
   const theme = useTheme();
@@ -37,11 +38,13 @@ export default function Navbar() {
           variant="h5"
           fontWeight="bold"
           color="text.primary"
+          component={Link} to="/"
           sx={{
             ml: "2.5%",
             fontFamily: "'Outfit', sans-serif",
             letterSpacing: "0.2rem",
             cursor: 'pointer',
+            textDecoration: 'none',
           }}
         >
           DEEJOY
@@ -56,8 +59,8 @@ export default function Navbar() {
           }}
         >
           <Box sx={{ display: { xs: "none", sm: "flex" }, gap: "10px" }}>
-            <Button sx={{ color: "text.primary" }}>Home</Button>
-            <Button sx={{ color: "text.primary" }}>Favourite</Button>
+            <Button component={Link} to="/" sx={{ color: "text.primary" }}>Home</Button>
+            <Button component={Link} to="/favourite" sx={{ color: "text.primary" }}>Favourite</Button>
             <Button sx={{ color: "text.primary" }}>Blog</Button>
             <Button sx={{ color: "text.primary" }}>About</Button>
           </Box>

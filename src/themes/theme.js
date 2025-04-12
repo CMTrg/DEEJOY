@@ -35,44 +35,45 @@ export const lightTheme = createTheme({
       },
     },
     MuiCssBaseline: {
-      styleOverrides: (theme) => ({
-        body: {
+        styleOverrides: (theme) => ({
+          html: {
+            overflowY: 'scroll', // ⚠️ Quan trọng: luôn giữ chỗ scrollbar
+          },
+          body: {
             transition: 'background-color 0.5s ease, color 0.5s ease',
-
-            overflowY: 'scroll',
-            scrollbarGutter: 'stable',
-          // Firefox scrollbar
-          scrollbarWidth: "thin",
-          scrollbarColor:
-            theme.palette.mode === "dark"
-              ? "rgba(255,255,255,0.3) transparent"
-              : "rgba(0,0,0,0.4) transparent",
-        },
-
-        // WebKit scrollbar (Chrome, Safari, Edge)
-        "*::-webkit-scrollbar": {
-          width: "8px",
-          height: "8px",
-        },
-        "*::-webkit-scrollbar-track": {
-          background: "transparent",
-        },
-        "*::-webkit-scrollbar-thumb": {
-          backgroundColor:
-            theme.palette.mode === "dark"
-              ? "rgba(255,255,255,0.3)"
-              : "rgba(0,0,0,0.3)",
-          borderRadius: "999px",
-          transition: "background-color 0.3s ease",
-        },
-        "*::-webkit-scrollbar-thumb:hover": {
-          backgroundColor:
-            theme.palette.mode === "dark"
-              ? "rgba(255,255,255,0.5)"
-              : "rgba(0,0,0,0.6)",
-        },
-      }),
-    },
+            scrollbarGutter: 'stable', // giữ layout ổn định
+      
+            // Firefox
+            scrollbarWidth: 'thin',
+            scrollbarColor:
+              theme.palette.mode === 'dark'
+                ? 'rgba(255,255,255,0.3) transparent'
+                : 'rgba(0,0,0,0.4) transparent',
+          },
+      
+          '*::-webkit-scrollbar': {
+            width: '8px',
+            height: '8px',
+          },
+          '*::-webkit-scrollbar-track': {
+            background: 'transparent',
+          },
+          '*::-webkit-scrollbar-thumb': {
+            backgroundColor:
+              theme.palette.mode === 'dark'
+                ? 'rgba(255,255,255,0.3)'
+                : 'rgba(0,0,0,0.3)',
+            borderRadius: '999px',
+            transition: 'background-color 0.3s ease',
+          },
+          '*::-webkit-scrollbar-thumb:hover': {
+            backgroundColor:
+              theme.palette.mode === 'dark'
+                ? 'rgba(255,255,255,0.5)'
+                : 'rgba(0,0,0,0.6)',
+          },
+        }),
+      },
   },
 
   customShadows: {
@@ -118,42 +119,45 @@ export const darkTheme = createTheme({
     },
 
     MuiCssBaseline: {
-      styleOverrides: (theme) => ({
-        body: {
-            overflowY: 'scroll',
-            scrollbarGutter: 'stable',
-          // Firefox scrollbar
-          scrollbarWidth: "thin",
-          scrollbarColor:
-            theme.palette.mode === "dark"
-              ? "rgba(255,255,255,0.3) transparent"
-              : "rgba(0,0,0,0.4) transparent",
-        },
-
-        // WebKit scrollbar (Chrome, Safari, Edge)
-        "*::-webkit-scrollbar": {
-          width: "8px",
-          height: "8px",
-        },
-        "*::-webkit-scrollbar-track": {
-          background: "transparent",
-        },
-        "*::-webkit-scrollbar-thumb": {
-          backgroundColor:
-            theme.palette.mode === "dark"
-              ? "rgba(255,255,255,0.3)"
-              : "rgba(0,0,0,0.3)",
-          borderRadius: "999px",
-          transition: "background-color 0.3s ease",
-        },
-        "*::-webkit-scrollbar-thumb:hover": {
-          backgroundColor:
-            theme.palette.mode === "dark"
-              ? "rgba(255,255,255,0.5)"
-              : "rgba(0,0,0,0.6)",
-        },
-      }),
-    },
+        styleOverrides: (theme) => ({
+          html: {
+            overflowY: 'scroll', // ⚠️ Quan trọng: luôn giữ chỗ scrollbar
+          },
+          body: {
+            transition: 'background-color 0.5s ease, color 0.5s ease',
+            scrollbarGutter: 'stable', // giữ layout ổn định
+      
+            // Firefox
+            scrollbarWidth: 'thin',
+            scrollbarColor:
+              theme.palette.mode === 'dark'
+                ? 'rgba(255,255,255,0.3) transparent'
+                : 'rgba(0,0,0,0.4) transparent',
+          },
+      
+          '*::-webkit-scrollbar': {
+            width: '8px',
+            height: '8px',
+          },
+          '*::-webkit-scrollbar-track': {
+            background: 'transparent',
+          },
+          '*::-webkit-scrollbar-thumb': {
+            backgroundColor:
+              theme.palette.mode === 'dark'
+                ? 'rgba(255,255,255,0.3)'
+                : 'rgba(0,0,0,0.3)',
+            borderRadius: '999px',
+            transition: 'background-color 0.3s ease',
+          },
+          '*::-webkit-scrollbar-thumb:hover': {
+            backgroundColor:
+              theme.palette.mode === 'dark'
+                ? 'rgba(255,255,255,0.5)'
+                : 'rgba(0,0,0,0.6)',
+          },
+        }),
+      },
   },
 
   customBackground: {

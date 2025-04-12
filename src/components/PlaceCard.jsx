@@ -35,6 +35,7 @@ export default function PlaceCard({
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
+        p: 1,
         gap: 1,
         bgcolor: (theme) =>
           theme.palette.mode === "light"
@@ -175,7 +176,7 @@ export default function PlaceCard({
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        sx={{ px: 1.5, pb: 1, width: '100%' }}
+        sx={{ px: 1.5, mb: 1, width: '100%' }}
       >
         <IconWithText icon={<FavoriteBorderIcon />} text={likes} />
         <IconWithText icon={<ChatBubbleOutlineIcon />} text={comments} />
