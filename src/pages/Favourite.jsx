@@ -3,148 +3,114 @@ import Navbar from "../components/Navbar";
 import AnimatedBackground from "../components/AnimatedBackground.jsx";
 import PlaceCard from "../components/PlaceCard.jsx";
 import Footer from "../components/Footer.jsx";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 
 
 export default function Favourite() {
-  return (
-    useEffect(() => {
-        const target = document.getElementById("favourite-section");
-        if (target) {
-          target.scrollIntoView({ behavior: "smooth" });
-        }
-      }, []), 
+  const [places, setPlaces] = useState([]);
+  
 
-    <Box  sx={{ mt: "80px"}}>
-        <Navbar></Navbar>
-        <AnimatedBackground></AnimatedBackground>
-          {/*contain title and card */}
-          <Box
-          id='favourite-section'
-          
+  useEffect(() => {
+    const target = document.getElementById("favourite-section");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth" });
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const res = await axios.get(
+            `http://localhost:4000/api/destinations/explore/random?lat=${latitude}&lng=${longitude}`
+          );
+          console.log("API response:", res.data);
+
+          if (res.data?.places) {
+            setPlaces(res.data.places);
+          } else {
+            console.warn("Unexpected API structure", res.data);
+          }
+        } catch (err) {
+          console.error("Failed to fetch destinations", err);
+        }
+      },
+      (err) => {
+        console.error("Location access denied:", err);
+      }
+    );
+  }, []);
+
+  return (
+    <Box sx={{ mt: "80px" }}>
+      <Navbar />
+      <AnimatedBackground />
+
+      <Box
+        id="favourite-section"
+        sx={{
+          scrollMarginTop: "70px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+          width: "100%",
+          gap: 1,
+          mb: 20,
+        }}
+      >
+        <Typography
+          variant="h4"
+          fontWeight="bold"
+          color="text.primary"
           sx={{
-            scrollMarginTop: '70px',
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            flexDirection: "column",
-            width: "100%",
-            gap: 1,
-            mb: 20,
+            fontFamily: "'Outfit', sans-serif",
+            letterSpacing: "0.2rem",
+            mt: "1rem",
           }}
         >
-          <Typography
-            variant="h4"
-            fontWeight="bold"
-            color="text.primary"
-            sx={{
-              fontFamily: "'Outfit', sans-serif",
-              letterSpacing: "0.2rem",
-              mt: "1rem",
-            }}
-          >
-            FAVOURITE
-          </Typography>
-          <Box
-            sx={{
-              width: { md: "80%", xs: "100%" },
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "repeat(2, 1fr)", // mobile: 2 cột
-                md: "repeat(4, 1fr)", // desktop: 4 cột
-              },
-              gap: "20px",
-              justifyItems: "center", // căn giữa card trong ô
-              p: 1,
-            }}
-          >
-            <PlaceCard
-              image="/testcard.jpg"
-              title="Movie Theatre"
-              address="123, bcd street, hcm city"
-              rating={5.4}
-              description="abcdxyzjajdj, wadjwpojfpafpppfpa."
-              likes="20k"
-              shares="34"
-              comments="30"
-            />
-            <PlaceCard
-              image="/testcard.jpg"
-              title="Movie Theatre"
-              address="123, bcd street, hcm city"
-              rating={5.4}
-              description="abcdxyzjajdj, wadjwpojfpafpppfpa."
-              likes="20k"
-              shares="34"
-              comments="30"
-            />
-            <PlaceCard
-              image="/testcard.jpg"
-              title="Movie Theatre"
-              address="123, bcd street, hcm city"
-              rating={5.4}
-              description="abcdxyzjajdj, wadjwpojfpafpppfpa."
-              likes="20k"
-              shares="34"
-              comments="30"
-            />
-            <PlaceCard
-              image="/testcard.jpg"
-              title="Movie Theatre"
-              address="123, bcd street, hcm city"
-              rating={5.4}
-              description="abcdxyzjajdj, wadjwpojfpafpppfpa."
-              likes="20k"
-              shares="34"
-              comments="30"
-            />
-            <PlaceCard
-              image="/testcard.jpg"
-              title="Movie Theatre"
-              address="123, bcd street, hcm city"
-              rating={5.4}
-              description="abcdxyzjajdj, wadjwpojfpafpppfpa."
-              likes="20k"
-              shares="34"
-              comments="30"
-            />
-            <PlaceCard
-              image="/testcard.jpg"
-              title="Movie Theatre"
-              address="123, bcd street, hcm city"
-              rating={5.4}
-              description="abcdxyzjajdj, wadjwpojfpafpppfpa."
-              likes="20k"
-              shares="34"
-              comments="30"
-            />
-            <PlaceCard
-              image="/testcard.jpg"
-              title="Movie Theatre"
-              address="123, bcd street, hcm city"
-              rating={5.4}
-              description="abcdxyzjajdj, wadjwpojfpafpppfpa."
-              likes="20k"
-              shares="34"
-              comments="30"
-            />
-            <PlaceCard
-              image="/testcard.jpg"
-              title="Movie Theatre"
-              address="123, bcd street, hcm city"
-              rating={5.4}
-              description="abcdxyzjajdj, wadjwpojfpafpppfpa."
-              likes="20k"
-              shares="34"
-              comments="30"
-            />
-          </Box>
-         <Pagination count={10} /* variant="outlined" */ shape="rounded" color="secondary" sx={{
-            mt: 2,
-         }}></Pagination>
+          FAVOURITE
+        </Typography>
+
+        <Box
+          sx={{
+            width: { md: "80%", xs: "100%" },
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "repeat(2, 1fr)",
+              md: "repeat(4, 1fr)",
+            },
+            gap: "20px",
+            justifyItems: "center",
+            p: 1,
+          }}
+        >
+          {places.length > 0 ? (
+            places.map((place) => (
+              <PlaceCard
+                key={place._id || place.foursquareId}
+                image={place.images?.[0]}
+                title={place.name}
+                address={place.address || "Address unavailable"}
+                rating={place.rating || 0}
+                description={`Category: ${place.category || "Unknown"}`}
+                likes={place.favoritesCount || "0"}
+                shares={place.sharedCount || "0"}
+                comments={place.reviewCount || "0"}
+              />
+            ))
+          ) : (
+            <Typography variant="body1" sx={{ mt: 2 }}>
+              No destinations found.
+            </Typography>
+          )}
         </Box>
-        <Footer></Footer>
+
+        <Pagination count={10} shape="rounded" color="secondary" sx={{ mt: 2 }} />
+      </Box>
+      <Footer />
     </Box>
   );
 }

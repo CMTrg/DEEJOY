@@ -109,11 +109,11 @@ export default function PlaceCard({
             component="img"
             image={image}
             alt={title}
-            height="auto"
             sx={{
+              width: "100%",
+              height: 140, 
               objectFit: "cover",
-              borderTopLeftRadius: 10,
-              borderTopRightRadius: 10,
+              borderRadius: "10px",
             }}
           />
           {/* Avatar on image */}

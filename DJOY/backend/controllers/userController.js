@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { sendVerificationEmail } from "../utils/sendEmail.js";
 import jwt from "jsonwebtoken";
-import cloudinary from "../utils/cloudinary.js";
+import { cloudinary } from "../config/cloudinary.js";
 
 export const registerUser = async (req, res) => {
   try {
