@@ -14,6 +14,9 @@ export const lightTheme = createTheme({
       default: "#8FD7FF",
       paper: "#ffffff",
     },
+    blogbox: {
+      main: "rgba(72,25,189,0.5)"
+    },
 
     text: {
       primary: "#000000",
@@ -88,7 +91,7 @@ export const darkTheme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#982399",
+      main: "#ec37ed",
       text: "#6B27F8",
       texthover: '#65676b'
     },
@@ -104,6 +107,9 @@ export const darkTheme = createTheme({
     },
     text: {
       primary: "#FFFFFF",
+    },
+    blogbox: {
+      main: "rgba(72,25,189,0.5)"
     },
   },
   components: {
