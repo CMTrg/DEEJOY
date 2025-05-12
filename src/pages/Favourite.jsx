@@ -6,11 +6,10 @@ import Footer from "../components/Footer.jsx";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-
-
 export default function Favourite() {
   const [places, setPlaces] = useState([]);
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const placesPerPage = 8;
 
   useEffect(() => {
     const target = document.getElementById("favourite-section");
@@ -42,6 +41,16 @@ export default function Favourite() {
       }
     );
   }, []);
+
+  const indexOfLastPlace = currentPage * placesPerPage;
+  const indexOfFirstPlace = indexOfLastPlace - placesPerPage;
+  const currentPlaces = places.slice(indexOfFirstPlace, indexOfLastPlace);
+  const pageCount = Math.ceil(places.length / placesPerPage);
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <Box sx={{ mt: "80px" }}>
@@ -87,8 +96,8 @@ export default function Favourite() {
             p: 1,
           }}
         >
-          {places.length > 0 ? (
-            places.map((place) => (
+          {currentPlaces.length > 0 ? (
+            currentPlaces.map((place) => (
               <PlaceCard
                 key={place._id || place.foursquareId}
                 image={place.images?.[0]}
@@ -103,12 +112,21 @@ export default function Favourite() {
             ))
           ) : (
             <Typography variant="body1" sx={{ mt: 2 }}>
-              No destinations found.
+              Fetching destinations...
             </Typography>
           )}
         </Box>
 
-        <Pagination count={10} shape="rounded" color="secondary" sx={{ mt: 2 }} />
+        {pageCount > 1 && (
+          <Pagination
+            count={pageCount}
+            page={currentPage}
+            onChange={handlePageChange}
+            shape="rounded"
+            color="secondary"
+            sx={{ mt: 2 }}
+          />
+        )}
       </Box>
       <Footer />
     </Box>
