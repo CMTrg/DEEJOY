@@ -1,15 +1,71 @@
-import { Box, InputBase, IconButton, Button } from "@mui/material";
+import { useState, useEffect } from "react";
+import {
+  Box,
+  IconButton,
+  Button,
+  Autocomplete,
+  TextField,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PlaceIcon from "@mui/icons-material/Place";
+import axios from "axios";
 
-export default function SearchBar() {
+export default function SearchBar({ onSearch, lat, lng }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (searchTerm.trim().length < 2 || lat === null || lng === null) return;
+      try {
+        const res = await axios.get(
+          `http://localhost:4000/api/destinations/autocomplete`, {
+            params: {
+              query: searchTerm,
+              lat: lat,
+              lng: lng
+            }
+          }
+        );
+        if (Array.isArray(res.data)) {
+          setSuggestions(res.data); 
+        } else {
+          console.warn("Unexpected autocomplete structure:", res.data);
+          setSuggestions([]);
+        }
+      } catch (err) {
+        console.error("Autocomplete fetch failed:", err);
+        setSuggestions([]);
+      }
+    };
+
+    const delayDebounce = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, lat, lng]); 
+
+  const handleSearch = async (value = searchTerm) => {
+    if (!value.trim() || lat === null || lng === null) {
+      alert("Waiting for location... Please try again in a moment.");
+      return;
+    }
+
+    if (onSearch) {
+      onSearch(value.trim());
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
   return (
     <Box
       sx={{
         display: "flex",
         alignItems: "center",
-        width: { xs: '70%', md: '50%' },
-        height: "auto",
+        width: { xs: "70%", md: "50%" },
         bgcolor: (theme) =>
           theme.palette.mode === "dark"
             ? "rgba(4, 1, 54, 0.7)"
@@ -21,21 +77,41 @@ export default function SearchBar() {
           theme.palette.mode === "light"
             ? "4px 4px 5.3px #A2A8FF"
             : "4px 4px 5.3px #8727FC",
-
         mb: 2,
       }}
     >
-      <InputBase
-        placeholder="Search for places here..."
-        sx={{
-          flexGrow: 1,
-          fontFamily: "Outfit",
-          fontSize: "1rem",
-          color: "text.primary",
+      <Autocomplete
+        freeSolo
+        options={suggestions}
+        getOptionLabel={(option) =>
+          typeof option === "string" ? option : option?.name || ""
+        }
+        onInputChange={(e, val) => setSearchTerm(val)}
+        onChange={(e, val) => {
+          if (typeof val === "string") {
+            handleSearch(val);
+          } else if (val?.name) {
+            handleSearch(val.name);
+          }
         }}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            variant="standard"
+            placeholder="Search for places here..."
+            onKeyDown={handleKeyDown}
+            sx={{
+              flexGrow: 1,
+              fontFamily: "Outfit",
+              fontSize: "1rem",
+              input: { color: "text.primary" },
+            }}
+          />
+        )}
+        sx={{ flexGrow: 1 }}
       />
 
-      <IconButton sx={{ ml: 1 }}>
+      <IconButton sx={{ ml: 1 }} onClick={() => handleSearch()}>
         <SearchIcon />
       </IconButton>
 
@@ -46,10 +122,10 @@ export default function SearchBar() {
           disableElevation
           disableRipple
           sx={{
-            minWidth: "auto", // cho phép tự động co lại
-            width: "36px", // ép chiều rộng tối đa
-            height: "36px", // ép chiều cao nếu cần
-            padding: 0, // xoá padding nội bộ
+            minWidth: "auto",
+            width: "36px",
+            height: "36px",
+            padding: 0,
             borderRadius: "999px",
             textTransform: "none",
             color: "text.primary",

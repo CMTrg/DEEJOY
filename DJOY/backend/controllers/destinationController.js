@@ -132,12 +132,33 @@ export const searchDestinations = async (req, res) => {
       return res.status(400).json({ message: "Query, latitude, and longitude are required" });
     }
 
+    const regex = new RegExp(query, "i");
+    const localResults = await Destination.find(
+      {
+        $or: [
+          { name: { $regex: regex } },
+          { address: { $regex: regex } }
+        ]
+      },
+      {
+        name: 1,
+        address: 1,
+        images: { $slice: 1 },
+        rating: 1,
+        category: 1,
+        favoritesCount: 1,
+        sharedCount: 1,
+        reviewCount: 1,
+        location: 1,
+      }
+    ).limit(10);
+
     const response = await axios.get("https://api.foursquare.com/v3/places/search", {
       headers: { Authorization: FOURSQUARE_API_KEY },
       params: { query, ll: `${lat},${lng}`, limit: 10 }
     });
 
-    const places = await Promise.all(response.data.results.map(async (place) => {
+    const apiPlaces = await Promise.all(response.data.results.map(async (place) => {
       let images = [];
 
       try {
@@ -147,7 +168,7 @@ export const searchDestinations = async (req, res) => {
         });
         images = photoRes.data.map(photo => `${photo.prefix}original${photo.suffix}`);
       } catch {
-        images = []; 
+        images = [];
       }
 
       return {
@@ -155,19 +176,64 @@ export const searchDestinations = async (req, res) => {
         name: place.name,
         location: place.geocodes?.main || { lat: 0, lng: 0 },
         category: place.categories?.[0]?.name || "Unknown",
-        images
+        images,
+        address: place.location?.formatted_address || "Unknown",
+        rating: 0,
+        favoritesCount: 0,
+        sharedCount: 0,
+        reviewCount: 0
       };
     }));
 
-    if (!places.length) {
+    const mergedResults = [...localResults.map(doc => doc.toObject()), ...apiPlaces];
+
+    if (!mergedResults.length) {
       return res.status(404).json({ message: "No destinations found" });
     }
 
-    res.status(200).json(places);
+    res.status(200).json(mergedResults);
   } catch (error) {
+    console.error("Search error:", error);
     res.status(500).json({ message: "Failed to search destinations", error: error.message });
   }
 };
+
+export const getAutocompleteSuggestions = async (req, res) => {
+  try {
+    const { query, lat, lng } = req.query;
+
+    if (!query || !lat || !lng) {
+      return res.status(400).json({ message: "Query, lat, and lng are required" });
+    }
+
+    const response = await axios.get("https://api.foursquare.com/v3/autocomplete", {
+      headers: {
+        Authorization: FOURSQUARE_API_KEY,
+      },
+      params: {
+        query,
+        ll: `${lat},${lng}`,
+        limit: 5,
+        types: "place",
+      },
+    });
+
+    console.log("Foursquare autocomplete raw response:", response.data); 
+
+    const suggestions = response.data.results
+      .filter(item => item.place)
+      .map(item => ({
+        id: item.place.fsq_id,
+        name: item.place.name,
+      }));
+
+    res.status(200).json(suggestions);
+  } catch (err) {
+    console.error("Autocomplete error:", err.response?.data || err.message);
+    res.status(500).json({ message: "Failed to fetch suggestions" });
+  }
+};
+
 
 export const exploreRandomDestinations = async (req, res) => {
   const { lat, lng } = req.query;
