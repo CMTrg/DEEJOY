@@ -32,6 +32,7 @@ export default [
 
       'no-console': 'warn',
       'no-debugger': 'error',
+      'no-undef': 'error', // ✅ Bắt lỗi undefined variables như thiếu import
     },
   },
 ]

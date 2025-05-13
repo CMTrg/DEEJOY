@@ -17,6 +17,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import ThemeModeSelect from "../ThemeModeContext";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import logo from "../assets/icon2.svg";
 
 export default function Navbar() {
   const theme = useTheme();
@@ -41,22 +42,29 @@ export default function Navbar() {
       }}
     >
       <Toolbar sx={{ justifyContent: "space-between" }}>
-        <Typography
-          variant="h5"
-          fontWeight="bold"
-          color="text.primary"
-          component={Link}
-          to="/"
-          sx={{
-            ml: "2.5%",
-            fontFamily: "'Outfit', sans-serif",
-            letterSpacing: "0.2rem",
-            cursor: "pointer",
-            textDecoration: "none",
-          }}
-        >
-          DEEJOY
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <img
+            src={logo}
+            alt="logo"
+            style={{ width: "40px", height: "auto" }}
+          />
+          <Typography
+            variant="h5"
+            fontWeight="bold"
+            color="text.primary"
+            component={Link}
+            to="/"
+            sx={{
+              ml: "2.5px",
+              fontFamily: "'Outfit', sans-serif",
+              letterSpacing: "0.2rem",
+              cursor: "pointer",
+              textDecoration: "none",
+            }}
+          >
+            DEEJOY
+          </Typography>
+        </Box>
 
         <Box
           sx={{
@@ -77,13 +85,17 @@ export default function Navbar() {
             >
               Favourite
             </Button>
-            <Button sx={{ color: "text.primary" }}>Blog</Button>
-            <Button sx={{ color: "text.primary" }}>About</Button>
+            <Button component={Link}
+            to="/blog" sx={{ color: "text.primary" }}>Blog</Button>
+            <Button component={Link}
+            to="/about" sx={{ color: "text.primary" }}>About</Button>
+            <Button component={Link}
+            to="/auth" sx={{ color: "text.primary" }}>Auth</Button>
           </Box>
 
           <ThemeModeSelect />
           <Avatar
-            src=""
+            src="testcard.jpg"
             alt="User Avatar"
             sx={{
               width: 32,
@@ -94,7 +106,7 @@ export default function Navbar() {
               cursor: "pointer",
             }}
           >
-            U
+            
           </Avatar>
 
           <IconButton
@@ -123,8 +135,8 @@ export default function Navbar() {
               {[
                 { text: "Home", path: "/" },
                 { text: "Favourite", path: "/favourite" },
-                { text: "Blog", path: "/" },
-                { text: "About", path: "/" },
+                { text: "Blog", path: "/blog" },
+                { text: "About", path: "/about" },
               ].map(({ text, path }) => (
                 <ListItem key={text} disablePadding>
                   <ListItemButton
