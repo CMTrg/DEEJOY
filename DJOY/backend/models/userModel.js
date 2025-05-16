@@ -9,17 +9,23 @@ const UserSchema = new mongoose.Schema({
     type: String, 
     enum: ["admin", "customer", "collaborator"], 
     default: "customer" 
-  }, 
-  isActive: {
+  },
+  isVerified: { 
     type: Boolean,
     default: false 
   },
-  verifyToken: {
-    type: String 
+  isOnline: { 
+    type: Boolean,
+    default: false
   },
+  lastSeen: { 
+    type: Date, 
+    default: null 
+  },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
   createdAt: { type: Date, default: Date.now }
 });
 
 const userModel = mongoose.models.User || mongoose.model("User", UserSchema);
-
 export default userModel;

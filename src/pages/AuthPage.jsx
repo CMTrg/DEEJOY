@@ -11,17 +11,61 @@ import {
   Divider,
 } from '@mui/material';
 import AnimatedBackground from '../components/AnimatedBackground';
-import Navbar from '../components/Navbar';
 import { motion } from 'framer-motion';
 import { useTheme } from '@mui/material/styles';
+import api from '../api/api';
+import { useNavigate } from 'react-router-dom';
 
 export default function AuthPage() {
   const [tab, setTab] = useState(0);
   const theme = useTheme();
+  const navigate = useNavigate();
 
-  const handleTabChange = (_, newValue) => {
-    setTab(newValue);
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  const [signupUsername, setSignupUsername] = useState('');
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+
+  const handleTabChange = (_, newValue) => setTab(newValue);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post('/users/login', {
+        username: loginUsername,
+        password: loginPassword,
+      });
+      localStorage.setItem('token', res.data.token);
+      alert('Login successful!');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Login failed');
+    }
   };
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/users/register', {
+        username: signupUsername,
+        email: signupEmail,
+        password: signupPassword,
+        role: "customer", 
+      });
+
+      navigate('/verify-email', {
+      state: {
+        email: signupEmail,
+        username: signupUsername,
+        password: signupPassword,
+      },
+    });
+    } catch (err) {
+      alert(err.response?.data?.message || 'Signup failed');
+    }
+  };
+
 
   return (
     <Box
@@ -33,9 +77,8 @@ export default function AuthPage() {
         p: 2,
       }}
     >
-      <AnimatedBackground></AnimatedBackground>
-{/*       <Navbar></Navbar>
- */}      <Paper
+      <AnimatedBackground />
+      <Paper
         elevation={6}
         component={motion.div}
         initial={{ opacity: 0, y: 50 }}
@@ -46,7 +89,7 @@ export default function AuthPage() {
           borderRadius: 4,
           width: '100%',
           maxWidth: 400,
-          backgroundColor: theme.palette.mode === 'dark' ? '#333' : 'white',           
+          backgroundColor: theme.palette.mode === 'dark' ? '#333' : 'white',
         }}
       >
         <Tabs
@@ -60,16 +103,17 @@ export default function AuthPage() {
         </Tabs>
 
         {tab === 0 ? (
-          <Box component="form" noValidate>
-            <Typography variant="h6" gutterBottom sx={{textAlign: 'center'}}>
+          <Box component="form" onSubmit={handleLogin}>
+            <Typography variant="h6" gutterBottom sx={{ textAlign: 'center' }}>
               Welcome Back
             </Typography>
             <TextField
-              label="Email"
-              type="email"
+              label="Username"
               fullWidth
               margin="normal"
               required
+              value={loginUsername}
+              onChange={(e) => setLoginUsername(e.target.value)}
             />
             <TextField
               label="Password"
@@ -77,37 +121,50 @@ export default function AuthPage() {
               fullWidth
               margin="normal"
               required
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
             />
             <Box sx={{ textAlign: 'right', mt: 1 }}>
-              <Link href="#" underline="hover" fontSize={14}>
+              <Link
+                component="button"
+                underline="hover"
+                fontSize={14}
+                onClick={() => navigate('/forgot-password')}
+              >
                 Forgot password?
               </Link>
             </Box>
-            <Box sx={{display:'flex', flexDirection: 'column', alignItems: 'center'}}>
-            <Button
-              fullWidth
-              variant="contained"
-              sx={{ mt: 2, width: '80%' }}
-            >
-              Login
-            </Button>
-            <Divider sx={{ my: 2 }}>or</Divider>
-            <Button fullWidth variant="outlined" sx={{width: '80%'}}>
-              Continue with Email
-            </Button>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Button
+                fullWidth
+                variant="contained"
+                type="submit"
+                sx={{ mt: 2, width: '80%' }}
+              >
+                Login
+              </Button>
+              <Divider sx={{ my: 2 }}>or</Divider>
+              <Button fullWidth variant="outlined" sx={{ width: '80%' }}>
+                Continue with Email
+              </Button>
             </Box>
-           
           </Box>
         ) : (
-          <Box component="form" noValidate sx={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+          <Box
+            component="form"
+            onSubmit={handleSignup}
+            sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+          >
             <Typography variant="h6" gutterBottom>
               Create Account
             </Typography>
             <TextField
-              label="Name"
+              label="Username"
               fullWidth
               margin="normal"
               required
+              value={signupUsername}
+              onChange={(e) => setSignupUsername(e.target.value)}
             />
             <TextField
               label="Email"
@@ -115,6 +172,8 @@ export default function AuthPage() {
               fullWidth
               margin="normal"
               required
+              value={signupEmail}
+              onChange={(e) => setSignupEmail(e.target.value)}
             />
             <TextField
               label="Password"
@@ -122,16 +181,19 @@ export default function AuthPage() {
               fullWidth
               margin="normal"
               required
+              value={signupPassword}
+              onChange={(e) => setSignupPassword(e.target.value)}
             />
             <Button
               fullWidth
               variant="contained"
-              sx={{ mt: 2, width:'80%' }}
+              type="submit"
+              sx={{ mt: 2, width: '80%' }}
             >
               Sign Up
             </Button>
             <Divider sx={{ my: 2 }}>or</Divider>
-            <Button fullWidth variant="outlined" sx={{width: '80%'}}>
+            <Button fullWidth variant="outlined" sx={{ width: '80%' }}>
               Sign up with Email
             </Button>
           </Box>
