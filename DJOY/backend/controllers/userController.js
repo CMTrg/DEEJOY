@@ -54,6 +54,10 @@ export const loginUser = async (req, res) => {
     if (!user.isVerified)
       return res.status(403).json({ message: "Please verify your email first." });
 
+    if (!user.password && user.googleId) {
+      return res.status(400).json({ message: "Use Google login for this account" });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
@@ -180,7 +184,7 @@ export const updateUserProfile = async (req, res) => {
       const result = await cloudinary.uploader.upload(req.file.path, {
         folder: "avatars",
       });
-      user.avatar = result.secure_url;
+      user.profilePicture = result.secure_url;
     }
 
     await user.save();

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -21,6 +21,36 @@ export default function AuthPage() {
   const theme = useTheme();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      localStorage.setItem('token', token);
+      navigate('/');
+    }
+  }, []);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+    if (error) {
+      alert(error);
+    }
+  }, []);
+
+
+  const handleOAuthLogin = () => {
+    const width = 500;
+    const height = 600;
+    const left = (window.innerWidth - width) / 2;
+    const top = (window.innerHeight - height) / 2;
+
+    window.open(
+      'http://localhost:4000/auth/google',
+      'Google Login',
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+  };
+
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
@@ -39,6 +69,7 @@ export default function AuthPage() {
       });
       localStorage.setItem('token', res.data.token);
       alert('Login successful!');
+      navigate('/');
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');
     }
@@ -51,21 +82,20 @@ export default function AuthPage() {
         username: signupUsername,
         email: signupEmail,
         password: signupPassword,
-        role: "customer", 
+        role: 'customer',
       });
 
       navigate('/verify-email', {
-      state: {
-        email: signupEmail,
-        username: signupUsername,
-        password: signupPassword,
-      },
-    });
+        state: {
+          email: signupEmail,
+          username: signupUsername,
+          password: signupPassword,
+        },
+      });
     } catch (err) {
       alert(err.response?.data?.message || 'Signup failed');
     }
   };
-
 
   return (
     <Box
@@ -144,8 +174,13 @@ export default function AuthPage() {
                 Login
               </Button>
               <Divider sx={{ my: 2 }}>or</Divider>
-              <Button fullWidth variant="outlined" sx={{ width: '80%' }}>
-                Continue with Email
+              <Button
+                fullWidth
+                variant="outlined"
+                sx={{ width: '80%' }}
+                onClick={handleOAuthLogin}
+              >
+                Continue with Google
               </Button>
             </Box>
           </Box>
@@ -193,8 +228,13 @@ export default function AuthPage() {
               Sign Up
             </Button>
             <Divider sx={{ my: 2 }}>or</Divider>
-            <Button fullWidth variant="outlined" sx={{ width: '80%' }}>
-              Sign up with Email
+            <Button
+              fullWidth
+              variant="outlined"
+              sx={{ width: '80%' }}
+              onClick={handleOAuthLogin}
+            >
+              Sign up with Google
             </Button>
           </Box>
         )}
