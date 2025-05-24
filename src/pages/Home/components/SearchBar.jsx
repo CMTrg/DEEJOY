@@ -9,26 +9,37 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import PlaceIcon from "@mui/icons-material/Place";
 import axios from "axios";
+import {
+  Popover,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem as SelectMenuItem,
+} from "@mui/material";
 
 export default function SearchBar({ onSearch, lat, lng }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null); // Menu anchor element
+  const [distance, setDistance] = useState("<10km"); // Default distance
+  const [location, setLocation] = useState(""); // Location input
 
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (searchTerm.trim().length < 2 || lat === null || lng === null) return;
       try {
         const res = await axios.get(
-          `http://localhost:4000/api/destinations/autocomplete`, {
+          `http://localhost:4000/api/destinations/autocomplete`,
+          {
             params: {
               query: searchTerm,
               lat: lat,
-              lng: lng
-            }
+              lng: lng,
+            },
           }
         );
         if (Array.isArray(res.data)) {
-          setSuggestions(res.data); 
+          setSuggestions(res.data);
         } else {
           console.warn("Unexpected autocomplete structure:", res.data);
           setSuggestions([]);
@@ -41,7 +52,7 @@ export default function SearchBar({ onSearch, lat, lng }) {
 
     const delayDebounce = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, lat, lng]); 
+  }, [searchTerm, lat, lng]);
 
   const handleSearch = async (value = searchTerm) => {
     if (!value.trim() || lat === null || lng === null) {
@@ -58,6 +69,25 @@ export default function SearchBar({ onSearch, lat, lng }) {
     if (e.key === "Enter") {
       handleSearch();
     }
+  };
+
+  // Handle location change
+  const handleLocationChange = (e) => {
+    setLocation(e.target.value);
+  };
+
+  // Handle distance change
+  const handleDistanceChange = (e) => {
+    setDistance(e.target.value);
+  };
+
+  // Toggle Menu visibility
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget); // Show the menu
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null); // Close the menu
   };
 
   return (
@@ -136,10 +166,54 @@ export default function SearchBar({ onSearch, lat, lng }) {
               borderColor: "primary.main",
             },
           }}
+          onClick={handleClick} // Open menu on click
         >
           <PlaceIcon fontSize="small" />
         </Button>
       </Box>
+      {/* Popover component for search and distance */}
+      <Popover
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+        sx={{ width: 300 }}
+      >
+        <Box sx={{ padding: 2 }}>
+          {/* Location input */}
+          <TextField
+            fullWidth
+            label="Where are you at?"
+            variant="outlined"
+            value={location}
+            onChange={handleLocationChange}
+            size="small"
+            sx={{ mb: 2 }}
+          />
+
+          {/* Distance selection */}
+          <FormControl fullWidth>
+            <InputLabel>Distance</InputLabel>
+            <Select
+              value={distance}
+              label="Distance"
+              onChange={handleDistanceChange}
+              size="small"
+            >
+              <SelectMenuItem value="<10km">Less than 10 km</SelectMenuItem>
+              <SelectMenuItem value="<5km">Less than 5 km</SelectMenuItem>
+              <SelectMenuItem value="<1km">Less than 1 km</SelectMenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      </Popover>
     </Box>
   );
 }
