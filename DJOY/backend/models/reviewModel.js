@@ -16,7 +16,8 @@ const ReviewSchema = new mongoose.Schema({
   comment: String,
   images: [{ type: String }], 
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], 
-  comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }] 
+  comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
+  sharedCount: { type: Number, default: 0 } 
 }, { timestamps: true });
 
 const commentModel = mongoose.models.Comment || mongoose.model("Comment", CommentSchema);

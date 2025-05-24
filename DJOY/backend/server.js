@@ -10,12 +10,12 @@ import { connectDB } from "./config/db.js";
 
 import destinationRoutes from "./routes/destinationRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 import googleAuthRoutes from "./routes/authRoutes.js";
 
 const app = express();
 const port = 4000;
 
-// Middleware setup
 app.use(cors({
   origin: "http://localhost:5173",
   credentials: true
@@ -39,11 +39,11 @@ app.use("/api/destinations", destinationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/auth", googleAuthRoutes);
 
-// ✅ Connect to MongoDB first, then start the server
+
 connectDB().then(() => {
   app.listen(port, () => {
-    console.log(`✅ Server running on http://localhost:${port}`);
+    console.log(`Server running on http://localhost:${port}`);
   });
 }).catch((err) => {
-  console.error("❌ Failed to connect to MongoDB:", err);
+  console.error("Failed to connect to MongoDB:", err);
 });

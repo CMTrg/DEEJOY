@@ -7,56 +7,64 @@ dotenv.config();
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
 export const addReview = async (req, res) => {
-  try {
+    try {
       const userId = req.user.userId;
       const { fsqId, rating, comment, images } = req.body;
 
-      if (!fsqId) return res.status(400).json({ message: "Foursquare ID is required" });
+      if (!fsqId) {
+        return res.status(400).json({ message: "Foursquare ID is required" });
+      }
 
       if (!images || images.length === 0) {
-          return res.status(400).json({ message: "At least one image is required for the review" });
+        return res.status(400).json({ message: "At least one image is required for the review" });
       }
 
       let destination = await Destination.findOne({ foursquareId: fsqId });
 
       if (!destination) {
-          try {
-              const foursquareResponse = await axios.get(`https://api.foursquare.com/v3/places/${fsqId}`, {
-                  headers: { Authorization: `Bearer ${FOURSQUARE_API_KEY}` }
-              });
+        try {
+          const response = await axios.get(`https://api.foursquare.com/v3/places/${fsqId}`, {
+            headers: {
+              Authorization: `Bearer ${FOURSQUARE_API_KEY}`
+            }
+          });
 
-              if (!foursquareResponse.data) {
-                  return res.status(404).json({ message: "Destination not found" });
-              }
+          const place = response.data;
 
-              destination = new Destination({
-                  foursquareId: fsqId,
-                  name: foursquareResponse.data.name,
-                  location: foursquareResponse.data.geocodes?.main || null,
-                  category: foursquareResponse.data.categories?.[0]?.name || "Unknown",
-                  images: foursquareResponse.data.photos || [],
-                  rating, 
-                  reviewCount: 1
-              });
-
-              await destination.save();
-          } catch (error) {
-              console.error("Foursquare fetch error:", error.message);
-              return res.status(500).json({ message: "Failed to fetch destination from Foursquare" });
+          if (!place) {
+            return res.status(404).json({ message: "Destination not found on Foursquare" });
           }
+
+          destination = new Destination({
+            foursquareId: fsqId,
+            name: place.name,
+            location: place.geocodes?.main || null,
+            category: place.categories?.[0]?.name || "Unknown",
+            images: [], 
+            rating,
+            reviewCount: 1
+          });
+
+          await destination.save();
+        } catch (error) {
+          console.error("Foursquare fetch error:", error.message);
+          return res.status(500).json({ message: "Failed to fetch destination from Foursquare" });
+        }
       } else {
-          destination.reviewCount += 1;
+        destination.reviewCount += 1;
       }
 
       const validImages = Array.isArray(images) ? images : [];
 
       const newReview = new Review({
-          user: userId,
-          destination: destination._id,
-          rating,
-          comment,
-          images: validImages
+        user: userId,
+        destination: destination._id,
+        rating,
+        comment,
+        images: validImages,
+        sharedCount: 0
       });
+
       await newReview.save();
 
       const allReviews = await Review.find({ destination: destination._id });
@@ -67,19 +75,29 @@ export const addReview = async (req, res) => {
       await destination.save();
 
       res.status(201).json({
-          message: "Review added successfully",
-          review: newReview,
-          updatedDestination: {
-              name: destination.name,
-              rating: destination.rating,
-              reviewCount: destination.reviewCount
-          }
+        message: "Review added successfully",
+        review: newReview,
+        updatedDestination: {
+          name: destination.name,
+          rating: destination.rating,
+          reviewCount: destination.reviewCount
+        }
       });
-  } catch (error) {
+    } catch (error) {
       console.error("Add review error:", error.message);
       res.status(500).json({ message: "Something went wrong" });
-  }
-};
+    }
+  };
+
+export const getAllReviews = async (req, res) => {
+    try {
+      const reviews = await Review.find().sort({ createdAt: -1 }); 
+      res.status(200).json(reviews);
+    } catch (error) {
+      console.error("Failed to fetch reviews:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  };
 
 export const deleteReview = async (req, res) => {
   try {
@@ -358,3 +376,18 @@ export const searchReviews = async (req, res) => {
   }
 };
   
+export const incrementReviewShareCount = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+
+    const review = await Review.findById(reviewId);
+    if (!review) return res.status(404).json({ message: "Review not found" });
+
+    review.sharedCount += 1;
+    await review.save();
+
+    res.status(200).json({ message: "Share count incremented", sharedCount: review.sharedCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

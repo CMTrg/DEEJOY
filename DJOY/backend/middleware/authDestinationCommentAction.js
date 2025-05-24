@@ -1,4 +1,4 @@
-import DestinationComment from "../models/DestinationComment.js";
+import DestinationComment from "../models/destinationCommentModel.js";
 import asyncHandler from "express-async-handler";
 
 export const authorizeDestinationCommentAction = asyncHandler(async (req, res, next) => {

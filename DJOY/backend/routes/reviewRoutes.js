@@ -1,6 +1,7 @@
 import express from "express";
 import {
   addReview,
+  getAllReviews,
   getReviewWithComment,
   deleteReview,
   editReview,
@@ -22,7 +23,8 @@ import { authorizeCommentAction } from "../middleware/authCommentAction.js";
 
 const router = express.Router();
 
-router.post("/", verifyToken, addReview);                        
+router.post("/", verifyToken, addReview);    
+router.get("/", getAllReviews);                    
 router.get("/search", searchReviews);                       
 router.get("/:reviewId", getReviewWithComment);              
 router.put("/:reviewId", verifyToken, authorizeReviewAction,editReview);                        
