@@ -16,12 +16,45 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import ThemeModeSelect from "../ThemeModeContext";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import logo from "../assets/icon2.svg";
 
 export default function Navbar() {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const res = await fetch("http://localhost:4000/api/users/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch profile");
+
+        const data = await res.json();
+        setUser(data);
+      } catch (error) {
+        console.error("Error fetching user profile:", error.message);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  const getAvatarSrc = () => {
+    if (!user?.profilePicture) return undefined;
+    return user.profilePicture.startsWith("http")
+      ? user.profilePicture
+      : `http://localhost:4000/${user.profilePicture}`;
+  };
 
   return (
     <AppBar
@@ -85,18 +118,29 @@ export default function Navbar() {
             >
               Favourite
             </Button>
-            <Button component={Link}
-            to="/blog" sx={{ color: "text.primary" }}>Blog</Button>
-            <Button component={Link}
-            to="/about" sx={{ color: "text.primary" }}>About</Button>
-            <Button component={Link}
-            to="/auth" sx={{ color: "text.primary" }}>Auth</Button>
+            <Button component={Link} to="/blog" sx={{ color: "text.primary" }}>
+              Blog
+            </Button>
+            <Button
+              component={Link}
+              to="/about"
+              sx={{ color: "text.primary" }}
+            >
+              About
+            </Button>
+            <Button
+              component={Link}
+              to="/auth"
+              sx={{ color: "text.primary" }}
+            >
+              Auth
+            </Button>
           </Box>
 
           <ThemeModeSelect />
           <Avatar
-            src="testcard.jpg"
-            alt="User Avatar"
+            src={getAvatarSrc()}
+            alt={user?.username || "User Avatar"}
             sx={{
               width: 32,
               height: 32,
@@ -106,7 +150,7 @@ export default function Navbar() {
               cursor: "pointer",
             }}
           >
-            
+            {!user?.profilePicture && user?.username?.[0]}
           </Avatar>
 
           <IconButton
