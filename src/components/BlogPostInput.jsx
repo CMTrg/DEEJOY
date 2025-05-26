@@ -17,7 +17,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import api from "../api/api"; 
 import { useLocation } from "../LocationContext"; 
 
-export default function BlogPostInput() {
+export default function BlogPostInput({onPostSuccess}) {
   const { lat, lng } = useLocation();
 
   const [postText, setPostText] = useState("");
@@ -80,6 +80,9 @@ export default function BlogPostInput() {
       setSelectedLocation(null);
       setLocationInputValue("");
       setShowLocationInput(false);
+      if (onPostSuccess) {
+        onPostSuccess(); 
+      }
     } catch (err) {
       console.error("Failed to post review:", err.response?.data || err.message);
       alert(err.response?.data?.message || "Failed to submit review.");

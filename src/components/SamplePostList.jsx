@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Box,
   Avatar,
@@ -14,25 +14,7 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
 import api from "../api/api";
 
-export default function SamplePostList() {
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchReviews = async () => {
-    try {
-      const res = await api.get("/reviews");
-      setReviews(res.data);
-    } catch (err) {
-      console.error("Failed to load reviews:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchReviews();
-  }, []);
-
+export default function SamplePostList({ reviews, loading, fetchReviews }) {
   const handleLikeToggle = async (reviewId) => {
     try {
       const token = localStorage.getItem("token");
@@ -43,7 +25,7 @@ export default function SamplePostList() {
 
       await api.post(
         `/reviews/${reviewId}/toggle-like`,
-        {}, 
+        {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -51,13 +33,12 @@ export default function SamplePostList() {
         }
       );
 
-      fetchReviews(); 
+      fetchReviews();
     } catch (err) {
       console.error("Error toggling like:", err.response?.data || err.message);
       alert(err.response?.data?.message || "Failed to toggle like.");
     }
   };
-
 
   if (loading) {
     return (
@@ -89,9 +70,20 @@ export default function SamplePostList() {
             boxShadow: 2,
           }}
         >
-
           <Box sx={{ display: "flex", alignItems: "center", mb: 1, gap: 2 }}>
-            <Avatar src={review.user?.profilePicture || ""} />
+            <Avatar
+            src={
+              review.user?.profilePicture?.startsWith("http")
+                ? review.user.profilePicture
+                : review.user?.profilePicture
+                ? `http://localhost:4000/${review.user.profilePicture}`
+                : undefined
+            }
+            alt={review.user?.username || "User"}
+            sx={{ bgcolor: "beige", fontWeight: "bold" }}
+          >
+            {!review.user?.profilePicture && review.user?.username?.[0]}
+          </Avatar>
             <Box>
               <Typography fontWeight="bold">
                 {review.user?.username || "Anonymous"}
@@ -131,14 +123,7 @@ export default function SamplePostList() {
           </Typography>
 
           {review.images && review.images.length > 0 && (
-            <Box
-              sx={{
-                display: "flex",
-                gap: 2,
-                flexWrap: "wrap",
-                mt: 2,
-              }}
-            >
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2 }}>
               {review.images.map((imgUrl, idx) => (
                 <Box
                   key={idx}

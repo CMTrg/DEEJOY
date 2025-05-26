@@ -385,79 +385,122 @@ export const exploreRandomDestinations = async (req, res) => {
 };
 
 
-export const getDestinationsByCategoryAndLocation = async (req, res) => {
-  const { category, lat, lng } = req.query;
+export const exploreBySingleCategory = async (req, res) => {
+  const { lat, lng } = req.query;
+  const category = req.params.category;
 
-  if (!category || !lat || !lng) {
-    return res.status(400).json({ message: "Category, latitude, and longitude are required" });
+  console.log(`Exploring category "${category}" with lat: ${lat}, lng: ${lng}`);
+
+  if (!lat || !lng || !category) {
+    console.warn("Missing lat/lng/category");
+    return res.status(400).json({ message: "Latitude, longitude and category are required" });
   }
 
   try {
-    const response = await axios.get("https://api.foursquare.com/v3/places/search", {
-      headers: { Authorization: FOURSQUARE_API_KEY },
+    const options = {
+      method: 'GET',
+      url: 'https://api.foursquare.com/v3/places/search',
+      headers: {
+        Authorization: FOURSQUARE_API_KEY
+      },
       params: {
         query: category,
         ll: `${lat},${lng}`,
-        limit: 10,
-      },
-    });
+        limit: 10
+      }
+    };
 
-    const places = await Promise.all(
-      response.data.results.map(async (place) => {
-        const foursquareId = place.fsq_id;
+    const response = await axios.request(options);
+    const results = response.data.results;
+    console.log(`Fetched ${results.length} places for category "${category}"`);
 
-        const existing = await Destination.findOne({ foursquareId });
-        if (existing) return existing;
+    const places = await Promise.all(results.map(async (place) => {
+      const foursquareId = place.fsq_id;
+      const geo = place.geocodes?.main;
+      const address = place.location?.formatted_address || place.location?.address || "Address unavailable";
 
-        let images = [];
-
-        try {
-          const photoRes = await axios.get(`https://api.foursquare.com/v3/places/${foursquareId}/photos`, {
-            headers: { Authorization: FOURSQUARE_API_KEY },
-            params: { limit: 5 },
-          });
-
-          const photoUrls = photoRes.data.map((p) => `${p.prefix}original${p.suffix}`);
-
-          const uploadedUrls = await Promise.all(
-            photoUrls.map(async (url) => {
-              const uploaded = await cloudinary.uploader.upload(url, {
-                folder: "foursquare_places",
-              });
-              return uploaded.secure_url;
-            })
-          );
-
-          images = uploadedUrls;
-        } catch {
-          images = [];
-        }
-
-        const newDestination = new Destination({
+      if (!geo || typeof geo.latitude !== "number" || typeof geo.longitude !== "number") {
+        console.warn(`Skipping ${place.name} due to missing geocodes`);
+        return {
           name: place.name,
           foursquareId,
-          location: place.geocodes?.main || { lat: 0, lng: 0 },
           category: place.categories?.[0]?.name || category,
-          images,
+          location: null,
+          address,
+          images: [],
           rating: 0,
-          searchCount: 0,
-          reviewCount: 0,
-          sharedCount: 0,
-          favoritesCount: 0,
-          trendingScore: 0,
-          isFeatured: false,
+          isStored: false
+        };
+      }
+
+      const existing = await Destination.findOne({ foursquareId });
+      if (existing) {
+        console.log(`Already exists: ${existing.name}`);
+        return {
+          ...existing.toObject(),
+          isStored: true,
+          address
+        };
+      }
+
+      let images = [];
+      try {
+        const photoRes = await axios.get(`https://api.foursquare.com/v3/places/${foursquareId}/photos`, {
+          headers: {
+            Authorization: FOURSQUARE_API_KEY
+          },
+          params: {
+            limit: 5
+          }
         });
+        images = photoRes.data.map(p => `${p.prefix}original${p.suffix}`);
+        console.log(`Fetched ${images.length} photos for: ${place.name}`);
+      } catch (err) {
+        console.warn(`No photos for ${place.name}:`, err.message);
+      }
 
+      const newDestination = new Destination({
+        name: place.name,
+        foursquareId,
+        location: {
+          lat: geo.latitude,
+          lng: geo.longitude
+        },
+        address,
+        category: place.categories?.[0]?.name || category,
+        images,
+        rating: 0,
+        searchCount: 0,
+        reviewCount: 0,
+        sharedCount: 0,
+        favoritesCount: 0,
+        trendingScore: 0,
+        isFeatured: false
+      });
+
+      try {
         await newDestination.save();
-        return newDestination;
-      })
-    );
+        console.log(`Saved new destination: ${place.name}`);
+      } catch (saveErr) {
+        console.error(`Error saving ${place.name}:`, saveErr.message);
+      }
 
-    res.status(200).json({ category, places });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch category destinations", error: error.message });
+      return {
+        ...newDestination.toObject(),
+        isStored: true,
+        address
+      };
+    }));
+
+    console.log(`Returning ${places.length} places`);
+    res.status(200).json({ places: places.filter(Boolean) });
+
+  } catch (err) {
+    console.error("Error in exploreBySingleCategory:", err.message);
+    res.status(500).json({ message: "Failed to explore category", error: err.message });
   }
 };
+
 
 export const updateTrendingDestinations = async () => {
   try {

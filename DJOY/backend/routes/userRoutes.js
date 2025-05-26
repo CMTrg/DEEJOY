@@ -2,6 +2,7 @@ import express from 'express';
 import {
   registerUser,
   loginUser,
+  logoutUser,
   getUserProfile,
   updateUserProfile,
   deleteUser,
@@ -17,6 +18,7 @@ const upload = multer({ dest: "uploads/" });
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/logout', verifyToken, logoutUser);
 router.post('/verify', verifyEmail);
 router.post("/forgot-password", forgotPassword);
 router.post('/reset-password', resetPassword);

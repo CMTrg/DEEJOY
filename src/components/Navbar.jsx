@@ -12,17 +12,25 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import SettingsIcon from "@mui/icons-material/Settings";
+import LogoutIcon from "@mui/icons-material/Logout";
 import ThemeModeSelect from "../ThemeModeContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import logo from "../assets/icon2.svg";
+import api from "../api/api";
 
 export default function Navbar() {
   const theme = useTheme();
-  const [open, setOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  const [open, setOpen] = useState(false); 
+  const [user, setUser] = useState(null); 
+  const [anchorEl, setAnchorEl] = useState(null); 
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -30,17 +38,13 @@ export default function Navbar() {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const res = await fetch("http://localhost:4000/api/users/profile", {
+        const res = await api.get("/users/profile", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         });
 
-        if (!res.ok) throw new Error("Failed to fetch profile");
-
-        const data = await res.json();
-        setUser(data);
+        setUser(res.data);
       } catch (error) {
         console.error("Error fetching user profile:", error.message);
       }
@@ -48,6 +52,39 @@ export default function Navbar() {
 
     fetchUserProfile();
   }, []);
+
+  const handleAvatarClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (token) {
+        await api.post("/users/logout", null, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+
+      localStorage.removeItem("token");
+      setUser(null);
+      handleMenuClose();
+      navigate("/auth");
+    } catch (error) {
+      console.error("Error during logout:", error.message);
+      localStorage.removeItem("token");
+      setUser(null);
+      navigate("/auth");
+    }
+  };
+
 
   const getAvatarSrc = () => {
     if (!user?.profilePicture) return undefined;
@@ -107,6 +144,7 @@ export default function Navbar() {
             paddingRight: "0.5%",
           }}
         >
+
           <Box sx={{ display: { xs: "none", sm: "flex" }, gap: "10px" }}>
             <Button component={Link} to="/" sx={{ color: "text.primary" }}>
               Home
@@ -118,7 +156,11 @@ export default function Navbar() {
             >
               Favourite
             </Button>
-            <Button component={Link} to="/blog" sx={{ color: "text.primary" }}>
+            <Button
+              component={Link}
+              to="/blog"
+              sx={{ color: "text.primary" }}
+            >
               Blog
             </Button>
             <Button
@@ -128,30 +170,95 @@ export default function Navbar() {
             >
               About
             </Button>
-            <Button
-              component={Link}
-              to="/auth"
-              sx={{ color: "text.primary" }}
-            >
-              Auth
-            </Button>
+            {!user && (
+              <Button
+                component={Link}
+                to="/auth"
+                sx={{ color: "text.primary" }}
+              >
+                Auth
+              </Button>
+            )}
           </Box>
 
           <ThemeModeSelect />
-          <Avatar
-            src={getAvatarSrc()}
-            alt={user?.username || "User Avatar"}
-            sx={{
-              width: 32,
-              height: 32,
-              bgcolor: "beige",
-              fontSize: 14,
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            {!user?.profilePicture && user?.username?.[0]}
-          </Avatar>
+
+          {user && (
+            <Box>
+              <Avatar
+                src={getAvatarSrc()}
+                alt={user?.username || "User Avatar"}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  bgcolor: "beige",
+                  fontSize: 14,
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+                onClick={handleAvatarClick}
+              >
+                {!user?.profilePicture && user?.username?.[0]}
+              </Avatar>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                PaperProps={{
+                  sx: {
+                    borderRadius: 2,
+                    minWidth: 180,
+                    mt: 1,
+                    boxShadow:
+                      theme.palette.mode === "dark"
+                        ? "0 4px 20px rgba(0,0,0,0.5)"
+                        : "0 4px 20px rgba(0,0,0,0.1)",
+                    backgroundColor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(30, 30, 60, 0.95)"
+                        : "rgba(255, 255, 255, 0.95)",
+                    backdropFilter: "blur(8px)",
+                  },
+                }}
+              >
+                <MenuItem
+                  onClick={handleMenuClose}
+                  component={Link}
+                  to="/settings"
+                  sx={{
+                    gap: 1.5,
+                    py: 1.2,
+                    "&:hover": {
+                      backgroundColor:
+                        theme.palette.mode === "dark"
+                          ? "rgba(100, 100, 180, 0.2)"
+                          : "rgba(180, 200, 255, 0.2)",
+                    },
+                  }}
+                >
+                  <SettingsIcon fontSize="small" />
+                  Settings
+                </MenuItem>
+                <MenuItem
+                  onClick={handleLogout}
+                  sx={{
+                    gap: 1.5,
+                    py: 1.2,
+                    "&:hover": {
+                      backgroundColor:
+                        theme.palette.mode === "dark"
+                          ? "rgba(180, 60, 60, 0.2)"
+                          : "rgba(255, 100, 100, 0.2)",
+                    },
+                  }}
+                >
+                  <LogoutIcon fontSize="small" />
+                  Logout
+                </MenuItem>
+              </Menu>
+
+            </Box>
+          )}
 
           <IconButton
             edge="end"
@@ -163,6 +270,7 @@ export default function Navbar() {
           >
             <MenuIcon />
           </IconButton>
+
           <Drawer
             anchor="right"
             open={open}
@@ -181,12 +289,21 @@ export default function Navbar() {
                 { text: "Favourite", path: "/favourite" },
                 { text: "Blog", path: "/blog" },
                 { text: "About", path: "/about" },
-              ].map(({ text, path }) => (
+                ...(user
+                  ? [
+                      { text: "Settings", path: "/settings" },
+                      { text: "Logout", action: handleLogout },
+                    ]
+                  : [{ text: "Auth", path: "/auth" }]),
+              ].map(({ text, path, action }) => (
                 <ListItem key={text} disablePadding>
                   <ListItemButton
-                    component={Link}
+                    component={path ? Link : "button"}
                     to={path}
-                    onClick={() => setOpen(false)}
+                    onClick={() => {
+                      if (action) action();
+                      setOpen(false);
+                    }}
                   >
                     <ListItemText primary={text} />
                   </ListItemButton>

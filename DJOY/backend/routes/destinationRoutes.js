@@ -8,7 +8,7 @@ import {
   updateDestination,
   deleteDestination,
   exploreRandomDestinations,
-  getDestinationsByCategoryAndLocation,
+  exploreBySingleCategory,
   searchDestinations,
   getAutocompleteSuggestions
 } from "../controllers/destinationController.js";
@@ -21,7 +21,7 @@ router.post("/", verifyToken, isAdminOrCollaborator, addDestination);
 
 router.get("/autocomplete", getAutocompleteSuggestions);
 router.get("/explore/random", exploreRandomDestinations);
-router.get("/explore/category", getDestinationsByCategoryAndLocation);
+router.get("/explore/category/:category", exploreBySingleCategory);
 router.get("/search", searchDestinations);
 
 router.get("/", getDestinations);

@@ -6,11 +6,11 @@ dotenv.config();
 
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
+
 export const addReview = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { fsqId, rating, comment } = req.body;
-    console.log("Received fsqId:", fsqId);
 
     if (!fsqId) {
       return res.status(400).json({ message: "Foursquare ID is required" });
@@ -24,38 +24,65 @@ export const addReview = async (req, res) => {
 
     if (!destination) {
       try {
-        const response = await axios.get(`https://api.foursquare.com/v3/places/${fsqId}`, {
+        const detailRes = await axios.get(`https://api.foursquare.com/v3/places/${fsqId}`, {
           headers: {
-            Authorization: `Bearer ${FOURSQUARE_API_KEY}`
+            Authorization: FOURSQUARE_API_KEY
           }
         });
 
-        const place = response.data;
+        const place = detailRes.data;
+        const geo = place.geocodes?.main;
+        const address = place.location?.formatted_address || place.location?.address || "Address unavailable";
 
-        if (!place) {
-          return res.status(404).json({ message: "Destination not found on Foursquare" });
+        if (!geo || typeof geo.latitude !== "number" || typeof geo.longitude !== "number") {
+          return res.status(400).json({ message: "Invalid location data from Foursquare" });
+        }
+
+        let images = [];
+        try {
+          const photoRes = await axios.get(`https://api.foursquare.com/v3/places/${fsqId}/photos`, {
+            headers: {
+              Authorization: FOURSQUARE_API_KEY
+            },
+            params: {
+              limit: 5
+            }
+          });
+
+          images = photoRes.data.map(p => `${p.prefix}original${p.suffix}`);
+        } catch (photoErr) {
+          console.warn(`Failed to fetch photos for ${place.name}: ${photoErr.message}`);
         }
 
         destination = new Destination({
-          foursquareId: fsqId,
           name: place.name,
-          location: place.geocodes?.main || null,
+          foursquareId: fsqId,
+          location: {
+            lat: geo.latitude,
+            lng: geo.longitude
+          },
+          address,
           category: place.categories?.[0]?.name || "Unknown",
-          images: [],
+          images,
           rating,
-          reviewCount: 1
+          reviewCount: 1,
+          searchCount: 0,
+          sharedCount: 0,
+          favoritesCount: 0,
+          trendingScore: 0,
+          isFeatured: false
         });
 
         await destination.save();
-      } catch (error) {
-        console.error("Foursquare fetch error:", error.message);
-        return res.status(500).json({ message: "Failed to fetch destination from Foursquare" });
+      } catch (err) {
+        console.error("Foursquare fetch error:", err.message);
+        return res.status(500).json({ message: "Failed to fetch or save destination" });
       }
     } else {
       destination.reviewCount += 1;
     }
 
-    const uploadedImages = req.files.map((file) => file.path);
+    const uploadedImages = req.files.map(file => file.path);
 
     const newReview = new Review({
       user: userId,
@@ -155,16 +182,31 @@ export const editReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
     const { rating, comment, images } = req.body;
-    const review = await Review.findById(reviewId);
-    if (!review) return res.status(404).json({ message: "Review not found" });
 
-    const oldRating = review.rating;
-    if (rating !== undefined) review.rating = rating;
-    if (comment !== undefined) review.comment = comment;
-    if (images !== undefined) review.images = images;
+    const review = await Review.findById(reviewId);
+    if (!review) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    if (rating !== undefined) {
+      const parsedRating = Number(rating);
+      if (isNaN(parsedRating) || parsedRating < 1 || parsedRating > 5) {
+        return res.status(400).json({ message: "Rating must be a number between 1 and 5" });
+      }
+      review.rating = parsedRating;
+    }
+
+    if (comment !== undefined) {
+      review.comment = comment;
+    }
+
+    if (images !== undefined) {
+      review.images = images;
+    }
+
     await review.save();
 
-    if (rating !== undefined && rating !== oldRating) {
+    if (rating !== undefined) {
       const destination = await Destination.findById(review.destination);
       if (destination) {
         const allReviews = await Review.find({ destination: destination._id });
@@ -176,7 +218,8 @@ export const editReview = async (req, res) => {
 
     res.status(200).json(review);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error editing review:", error);
+    res.status(500).json({ message: "Server error while editing review" });
   }
 };
 

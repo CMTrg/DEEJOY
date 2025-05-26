@@ -11,10 +11,15 @@ const categories = [
   "Public",
 ];
 
-export default function CategoryFilters() {
+export default function CategoryFilters({ onCategorySelect }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [selected, setSelected] = useState("");
+
+  const handleSelect = (label) => {
+    setSelected(label);
+    onCategorySelect(label);
+  };
 
   return (
     <Box
@@ -32,7 +37,7 @@ export default function CategoryFilters() {
       {isMobile ? (
         <Select
           value={selected}
-          onChange={(e) => setSelected(e.target.value)}
+          onChange={(e) => handleSelect(e.target.value)}
           displayEmpty
           size="small"
           sx={{
@@ -58,6 +63,7 @@ export default function CategoryFilters() {
         categories.map((label) => (
           <Button
             key={label}
+            onClick={() => handleSelect(label)}
             sx={{
               bgcolor: (theme) =>
                 theme.palette.mode === "dark"

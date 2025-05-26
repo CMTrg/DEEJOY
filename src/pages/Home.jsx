@@ -6,7 +6,7 @@ import CategoryFilters from "./Home/components/CategoryFilters.jsx";
 import PlaceCard from "../components/PlaceCard.jsx";
 import Footer from "../components/Footer.jsx";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/api";
 import { useLocation } from "../LocationContext";
 
 export default function Home() {
@@ -19,9 +19,9 @@ export default function Home() {
     if (lat !== null && lng !== null) {
       const fetchDestinations = async () => {
         try {
-          const res = await axios.get(
-            `http://localhost:4000/api/destinations/explore/random?lat=${lat}&lng=${lng}`
-          );
+          const res = await api.get("/destinations/explore/random", {
+            params: { lat, lng },
+          });
           if (res.data?.places) {
             setPlaces(res.data.places);
           } else {
@@ -31,13 +31,11 @@ export default function Home() {
           console.error("Failed to fetch destinations", err);
         }
       };
-
       fetchDestinations();
     }
   }, [lat, lng]);
 
   const handleSearch = async (searchTerm) => {
-    console.log("Search term received:", searchTerm);
     if (!searchTerm.trim()) return;
 
     if (lat === null || lng === null) {
@@ -46,19 +44,34 @@ export default function Home() {
     }
 
     try {
-      const res = await axios.get("http://localhost:4000/api/destinations/search", {
-        params: {
-          query: searchTerm,
-          lat,
-          lng
-        }
+      const res = await api.get("/destinations/search", {
+        params: { query: searchTerm, lat, lng },
       });
-
-      console.log("Search response:", res.data);
       setPlaces(res.data);
       setCurrentPage(1);
     } catch (err) {
       console.error("Search failed:", err);
+    }
+  };
+
+  const handleCategorySelect = async (category) => {
+    if (lat === null || lng === null) {
+      alert("Waiting for location... Please try again in a moment.");
+      return;
+    }
+
+    try {
+      const res = await api.get(`/destinations/explore/category/${encodeURIComponent(category)}`, {
+        params: { lat, lng },
+      });
+      if (res.data?.places) {
+        setPlaces(res.data.places);
+        setCurrentPage(1);
+      } else {
+        console.warn("Unexpected category response", res.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch by category", err);
     }
   };
 
@@ -76,7 +89,7 @@ export default function Home() {
     <Box>
       <AnimatedBackground />
       <Navbar />
-      <Box sx={{ position: 'relative' }}>
+      <Box sx={{ position: "relative" }}>
         <Box
           sx={{
             position: "absolute",
@@ -113,7 +126,7 @@ export default function Home() {
             }}
           >
             <SearchBar onSearch={handleSearch} lat={lat} lng={lng} />
-            <CategoryFilters />
+            <CategoryFilters onCategorySelect={handleCategorySelect} />
           </Box>
         </Box>
       </Box>
