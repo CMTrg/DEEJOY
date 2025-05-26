@@ -7,24 +7,20 @@ import PlaceCard from "../components/PlaceCard.jsx";
 import Footer from "../components/Footer.jsx";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useLocation } from "../LocationContext";
 
 export default function Home() {
   const [places, setPlaces] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [lat, setLat] = useState(null);
-  const [lng, setLng] = useState(null);
+  const { lat, lng } = useLocation();
   const placesPerPage = 8;
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        setLat(latitude);
-        setLng(longitude);
-
+    if (lat !== null && lng !== null) {
+      const fetchDestinations = async () => {
         try {
           const res = await axios.get(
-            `http://localhost:4000/api/destinations/explore/random?lat=${latitude}&lng=${longitude}`
+            `http://localhost:4000/api/destinations/explore/random?lat=${lat}&lng=${lng}`
           );
           if (res.data?.places) {
             setPlaces(res.data.places);
@@ -34,13 +30,11 @@ export default function Home() {
         } catch (err) {
           console.error("Failed to fetch destinations", err);
         }
-      },
-      (err) => {
-        console.error("Location access denied:", err);
-        alert("Location access is needed for better recommendations.");
-      }
-    );
-  }, []);
+      };
+
+      fetchDestinations();
+    }
+  }, [lat, lng]);
 
   const handleSearch = async (searchTerm) => {
     console.log("Search term received:", searchTerm);

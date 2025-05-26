@@ -19,11 +19,12 @@ import {
 import { verifyToken } from "../middleware/authMiddleware.js";
 import { authorizeReviewAction } from "../middleware/authReviewAction.js";
 import { authorizeCommentAction } from "../middleware/authCommentAction.js";
+import { upload } from "../config/cloudinary.js";
 
 
 const router = express.Router();
 
-router.post("/", verifyToken, addReview);    
+router.post("/", upload.array("images", 5), verifyToken, addReview);  
 router.get("/", getAllReviews);                    
 router.get("/search", searchReviews);                       
 router.get("/:reviewId", getReviewWithComment);              

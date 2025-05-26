@@ -23,8 +23,6 @@ function Blog() {
         <Navbar></Navbar>
         <BlogPostInput></BlogPostInput>
         <SamplePostList></SamplePostList>
-        <SamplePostList></SamplePostList>
-        <SamplePostList></SamplePostList>
         
       <Footer sx={{ position: "relative"}}></Footer>
     </Box>

@@ -21,9 +21,10 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
-  secret: "keyboard cat",
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false
 }));
@@ -38,6 +39,7 @@ app.get("/", (req, res) => {
 app.use("/api/destinations", destinationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/auth", googleAuthRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 
 connectDB().then(() => {

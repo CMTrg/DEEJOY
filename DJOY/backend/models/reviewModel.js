@@ -11,7 +11,7 @@ const CommentSchema = new mongoose.Schema({
 
 const ReviewSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, 
-  destination: { type: String, required: true }, 
+  destination: { type: mongoose.Schema.Types.ObjectId, ref: "Destination", required: true }, 
   rating: { type: Number, required: true }, 
   comment: String,
   images: [{ type: String }], 

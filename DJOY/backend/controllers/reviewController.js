@@ -7,97 +7,101 @@ dotenv.config();
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
 export const addReview = async (req, res) => {
-    try {
-      const userId = req.user.userId;
-      const { fsqId, rating, comment, images } = req.body;
+  try {
+    const userId = req.user.userId;
+    const { fsqId, rating, comment } = req.body;
+    console.log("Received fsqId:", fsqId);
 
-      if (!fsqId) {
-        return res.status(400).json({ message: "Foursquare ID is required" });
-      }
-
-      if (!images || images.length === 0) {
-        return res.status(400).json({ message: "At least one image is required for the review" });
-      }
-
-      let destination = await Destination.findOne({ foursquareId: fsqId });
-
-      if (!destination) {
-        try {
-          const response = await axios.get(`https://api.foursquare.com/v3/places/${fsqId}`, {
-            headers: {
-              Authorization: `Bearer ${FOURSQUARE_API_KEY}`
-            }
-          });
-
-          const place = response.data;
-
-          if (!place) {
-            return res.status(404).json({ message: "Destination not found on Foursquare" });
-          }
-
-          destination = new Destination({
-            foursquareId: fsqId,
-            name: place.name,
-            location: place.geocodes?.main || null,
-            category: place.categories?.[0]?.name || "Unknown",
-            images: [], 
-            rating,
-            reviewCount: 1
-          });
-
-          await destination.save();
-        } catch (error) {
-          console.error("Foursquare fetch error:", error.message);
-          return res.status(500).json({ message: "Failed to fetch destination from Foursquare" });
-        }
-      } else {
-        destination.reviewCount += 1;
-      }
-
-      const validImages = Array.isArray(images) ? images : [];
-
-      const newReview = new Review({
-        user: userId,
-        destination: destination._id,
-        rating,
-        comment,
-        images: validImages,
-        sharedCount: 0
-      });
-
-      await newReview.save();
-
-      const allReviews = await Review.find({ destination: destination._id });
-      const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
-      const avgRating = totalRating / allReviews.length;
-
-      destination.rating = avgRating;
-      await destination.save();
-
-      res.status(201).json({
-        message: "Review added successfully",
-        review: newReview,
-        updatedDestination: {
-          name: destination.name,
-          rating: destination.rating,
-          reviewCount: destination.reviewCount
-        }
-      });
-    } catch (error) {
-      console.error("Add review error:", error.message);
-      res.status(500).json({ message: "Something went wrong" });
+    if (!fsqId) {
+      return res.status(400).json({ message: "Foursquare ID is required" });
     }
-  };
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "At least one image is required for the review" });
+    }
+
+    let destination = await Destination.findOne({ foursquareId: fsqId });
+
+    if (!destination) {
+      try {
+        const response = await axios.get(`https://api.foursquare.com/v3/places/${fsqId}`, {
+          headers: {
+            Authorization: `Bearer ${FOURSQUARE_API_KEY}`
+          }
+        });
+
+        const place = response.data;
+
+        if (!place) {
+          return res.status(404).json({ message: "Destination not found on Foursquare" });
+        }
+
+        destination = new Destination({
+          foursquareId: fsqId,
+          name: place.name,
+          location: place.geocodes?.main || null,
+          category: place.categories?.[0]?.name || "Unknown",
+          images: [],
+          rating,
+          reviewCount: 1
+        });
+
+        await destination.save();
+      } catch (error) {
+        console.error("Foursquare fetch error:", error.message);
+        return res.status(500).json({ message: "Failed to fetch destination from Foursquare" });
+      }
+    } else {
+      destination.reviewCount += 1;
+    }
+
+    const uploadedImages = req.files.map((file) => file.path);
+
+    const newReview = new Review({
+      user: userId,
+      destination: destination._id,
+      rating,
+      comment,
+      images: uploadedImages,
+      sharedCount: 0
+    });
+
+    await newReview.save();
+
+    const allReviews = await Review.find({ destination: destination._id });
+    const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
+    const avgRating = totalRating / allReviews.length;
+
+    destination.rating = avgRating;
+    await destination.save();
+
+    res.status(201).json({
+      message: "Review added successfully",
+      review: newReview,
+      updatedDestination: {
+        name: destination.name,
+        rating: destination.rating,
+        reviewCount: destination.reviewCount
+      }
+    });
+  } catch (error) {
+    console.error("Add review error:", error.message);
+    res.status(500).json({ message: "Something went wrong while adding the review" });
+  }
+};
 
 export const getAllReviews = async (req, res) => {
-    try {
-      const reviews = await Review.find().sort({ createdAt: -1 }); 
-      res.status(200).json(reviews);
-    } catch (error) {
-      console.error("Failed to fetch reviews:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  };
+  try {
+    const reviews = await Review.find()
+      .sort({ createdAt: -1 })
+      .populate("user", "username profilePicture")           
+      .populate("destination", "name rating category");      
+    res.status(200).json(reviews);
+  } catch (error) {
+    console.error("Failed to fetch reviews:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 export const deleteReview = async (req, res) => {
   try {
