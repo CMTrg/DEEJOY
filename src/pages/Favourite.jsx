@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, Dialog, DialogTitle, DialogActions, Button } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  Button,
+} from "@mui/material";
 import api from "../api/api";
 import PlaceCard from "../components/PlaceCard";
 import Navbar from "../components/Navbar";
@@ -8,11 +15,16 @@ import AnimatedBackground from "../components/AnimatedBackground";
 
 export default function Favorite() {
   const [favorites, setFavorites] = useState([]);
-  const [confirmDialog, setConfirmDialog] = useState({ open: false, destinationId: null });
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    destinationId: null,
+  });
+
+  const token = localStorage.getItem("token");
 
   const fetchFavorites = async () => {
+    if (!token) return;
     try {
-      const token = localStorage.getItem("token");
       const res = await api.get("/favorites", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -32,7 +44,6 @@ export default function Favorite() {
 
   const handleConfirmRemove = async () => {
     try {
-      const token = localStorage.getItem("token");
       await api.delete("/favorites", {
         headers: { Authorization: `Bearer ${token}` },
         data: { destinationId: confirmDialog.destinationId },
@@ -78,8 +89,14 @@ export default function Favorite() {
           Your Favorite Places
         </Typography>
 
-        {favorites.length === 0 ? (
-          <Typography variant="body1">No favorites yet.</Typography>
+        {!token ? (
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 4 }}>
+            Please log in to view your favorite places.
+          </Typography>
+        ) : favorites.length === 0 ? (
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 4 }}>
+            You don't have any favorites yet.
+          </Typography>
         ) : (
           <Box
             sx={{
@@ -96,26 +113,30 @@ export default function Favorite() {
           >
             {favorites.map((fav) => (
               <PlaceCard
-              destinationId={fav.destinationId._id}
-              userId={fav.userId}
-              image={fav.destinationId.images?.[0]}
-              title={fav.destinationId.name}
-              address={fav.destinationId.address || "Address unavailable"}
-              rating={fav.destinationId.rating || 0}
-              description={`Category: ${fav.destinationId.category || "Unknown"}`}
-              shares={fav.destinationId.sharedCount || "0"}
-              comments={fav.destinationId.reviewCount || "0"}
-              initialLikes={fav.destinationId.favoritesCount || "0"}
-              onAttemptRemove={() => handleRemoveRequest(fav.destinationId._id)}
-            />
-
+                key={fav.destinationId._id}
+                destinationId={fav.destinationId._id}
+                userId={fav.userId}
+                image={fav.destinationId.images?.[0]}
+                title={fav.destinationId.name}
+                address={fav.destinationId.address || "Address unavailable"}
+                rating={fav.destinationId.rating || 0}
+                description={`Category: ${
+                  fav.destinationId.category || "Unknown"
+                }`}
+                shares={fav.destinationId.sharedCount || "0"}
+                comments={fav.destinationId.reviewCount || "0"}
+                initialLikes={fav.destinationId.favoritesCount || "0"}
+                onAttemptRemove={() => handleRemoveRequest(fav.destinationId._id)}
+              />
             ))}
           </Box>
         )}
       </Box>
 
       <Dialog open={confirmDialog.open} onClose={handleCancelRemove}>
-        <DialogTitle>Are you sure you want to remove this from favorites?</DialogTitle>
+        <DialogTitle>
+          Are you sure you want to remove this from favorites?
+        </DialogTitle>
         <DialogActions>
           <Button onClick={handleCancelRemove} color="primary">
             Cancel

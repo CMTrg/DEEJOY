@@ -5,6 +5,7 @@ const LocationContext = createContext();
 export const LocationProvider = ({ children }) => {
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
+  const [manualLocation, setManualLocation] = useState(null);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -12,14 +13,20 @@ export const LocationProvider = ({ children }) => {
         setLat(position.coords.latitude);
         setLng(position.coords.longitude);
       },
-      (err) => {
-        console.error("Geolocation error", err);
+      () => {
+        console.warn("Geolocation failed or denied. Falling back to manual input.");
       }
     );
   }, []);
 
+  const updateManualLocation = (location) => {
+    setManualLocation(location);
+    setLat(location.lat);
+    setLng(location.lng);
+  };
+
   return (
-    <LocationContext.Provider value={{ lat, lng }}>
+    <LocationContext.Provider value={{ lat, lng, updateManualLocation, manualLocation }}>
       {children}
     </LocationContext.Provider>
   );

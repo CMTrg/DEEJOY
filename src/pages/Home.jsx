@@ -10,10 +10,14 @@ import api from "../api/api";
 import { useLocation } from "../LocationContext";
 
 export default function Home() {
+  const { lat: contextLat, lng: contextLng } = useLocation(); 
+  const [manualLatLng, setManualLatLng] = useState(null);
   const [places, setPlaces] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const { lat, lng } = useLocation();
   const placesPerPage = 8;
+
+  const lat = manualLatLng?.lat ?? contextLat;
+  const lng = manualLatLng?.lng ?? contextLng;
 
   useEffect(() => {
     if (lat !== null && lng !== null) {
@@ -23,7 +27,10 @@ export default function Home() {
             params: { lat, lng },
           });
           if (res.data?.places) {
-            setPlaces(res.data.places);
+            const uniquePlaces = Array.from(
+              new Map(res.data.places.map(p => [(p._id || p.foursquareId), p])).values()
+            );
+            setPlaces(uniquePlaces);
           } else {
             console.warn("Unexpected API structure", res.data);
           }
@@ -36,10 +43,24 @@ export default function Home() {
   }, [lat, lng]);
 
   const handleSearch = async (searchTerm) => {
-    if (!searchTerm.trim()) return;
-
     if (lat === null || lng === null) {
-      alert("Waiting for location... Please try again in a moment.");
+      alert("Please provide a location.");
+      return;
+    }
+
+    if (!searchTerm) {
+      try {
+        const res = await api.get("/destinations/explore/random", {
+          params: { lat, lng },
+        });
+        const uniquePlaces = Array.from(
+          new Map(res.data.places.map(p => [(p._id || p.foursquareId), p])).values()
+        );
+        setPlaces(uniquePlaces);
+        setCurrentPage(1);
+      } catch (err) {
+        console.error("Failed to fetch random destinations", err);
+      }
       return;
     }
 
@@ -47,16 +68,20 @@ export default function Home() {
       const res = await api.get("/destinations/search", {
         params: { query: searchTerm, lat, lng },
       });
-      setPlaces(res.data);
+      const uniquePlaces = Array.from(
+        new Map(res.data.map(p => [(p._id || p.foursquareId), p])).values()
+      );
+      setPlaces(uniquePlaces);
       setCurrentPage(1);
     } catch (err) {
       console.error("Search failed:", err);
     }
   };
 
+
   const handleCategorySelect = async (category) => {
     if (lat === null || lng === null) {
-      alert("Waiting for location... Please try again in a moment.");
+      alert("Please provide a location.");
       return;
     }
 
@@ -65,7 +90,10 @@ export default function Home() {
         params: { lat, lng },
       });
       if (res.data?.places) {
-        setPlaces(res.data.places);
+        const uniquePlaces = Array.from(
+          new Map(res.data.places.map(p => [(p._id || p.foursquareId), p])).values()
+        );
+        setPlaces(uniquePlaces);
         setCurrentPage(1);
       } else {
         console.warn("Unexpected category response", res.data);
@@ -74,6 +102,7 @@ export default function Home() {
       console.error("Failed to fetch by category", err);
     }
   };
+
 
   const indexOfLastPlace = currentPage * placesPerPage;
   const indexOfFirstPlace = indexOfLastPlace - placesPerPage;
@@ -125,7 +154,12 @@ export default function Home() {
               alignItems: "center",
             }}
           >
-            <SearchBar onSearch={handleSearch} lat={lat} lng={lng} />
+            <SearchBar
+              lat={lat}
+              lng={lng}
+              setLatLng={setManualLatLng} 
+              onSearch={handleSearch}
+            />
             <CategoryFilters onCategorySelect={handleCategorySelect} />
           </Box>
         </Box>

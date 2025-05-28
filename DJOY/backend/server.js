@@ -13,6 +13,7 @@ import userRoutes from "./routes/userRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import favoriteRoutes from "./routes/favoriteRoutes.js";
 import googleAuthRoutes from "./routes/authRoutes.js";
+import geolocationRoutes from "./routes/geolocationRoutes.js";
 
 const app = express();
 const port = 4000;
@@ -42,7 +43,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/favorites", favoriteRoutes);
 app.use("/auth", googleAuthRoutes);
-
+app.use("/api/geolocation", geolocationRoutes);
 
 connectDB().then(() => {
   app.listen(port, () => {

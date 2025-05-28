@@ -5,45 +5,35 @@ import {
   Button,
   Autocomplete,
   TextField,
-} from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import PlaceIcon from "@mui/icons-material/Place";
-import axios from "axios";
-import {
   Popover,
   FormControl,
   InputLabel,
   Select,
   MenuItem as SelectMenuItem,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import PlaceIcon from "@mui/icons-material/Place";
+import axios from "axios";
+import { useLocation } from "../../../LocationContext";
 
-export default function SearchBar({ onSearch, lat, lng }) {
+
+export default function SearchBar({ onSearch }) {
+  const { lat, lng, updateManualLocation } = useLocation(); 
+
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const [anchorEl, setAnchorEl] = useState(null); // Menu anchor element
-  const [distance, setDistance] = useState("<10km"); // Default distance
-  const [location, setLocation] = useState(""); // Location input
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [distance, setDistance] = useState("<10km");
+  const [location, setLocation] = useState("");
 
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (searchTerm.trim().length < 2 || lat === null || lng === null) return;
       try {
-        const res = await axios.get(
-          `http://localhost:4000/api/destinations/autocomplete`,
-          {
-            params: {
-              query: searchTerm,
-              lat: lat,
-              lng: lng,
-            },
-          }
-        );
-        if (Array.isArray(res.data)) {
-          setSuggestions(res.data);
-        } else {
-          console.warn("Unexpected autocomplete structure:", res.data);
-          setSuggestions([]);
-        }
+        const res = await axios.get("http://localhost:4000/api/destinations/autocomplete", {
+          params: { query: searchTerm, lat, lng },
+        });
+        setSuggestions(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Autocomplete fetch failed:", err);
         setSuggestions([]);
@@ -55,40 +45,47 @@ export default function SearchBar({ onSearch, lat, lng }) {
   }, [searchTerm, lat, lng]);
 
   const handleSearch = async (value = searchTerm) => {
-    if (!value.trim() || lat === null || lng === null) {
+    if (lat === null || lng === null) {
       alert("Waiting for location... Please try again in a moment.");
       return;
     }
 
-    if (onSearch) {
-      onSearch(value.trim());
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      if (onSearch) onSearch(""); 
+    } else {
+      if (onSearch) onSearch(trimmed);
     }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
+    if (e.key === "Enter") handleSearch();
+  };
+
+  const handleClick = async (event) => {
+    setAnchorEl(event.currentTarget);
+    if (location.trim().length < 2) return;
+
+    try {
+      const res = await axios.get("http://localhost:4000/api/geolocation", {
+        params: { q: location.trim() },
+      });
+
+      if (res.data && res.data.lat && res.data.lng) {
+        updateManualLocation({ lat: res.data.lat, lng: res.data.lng }); 
+      } else {
+        alert("Could not find location.");
+      }
+    } catch (err) {
+      console.error("Location geocoding failed:", err);
+      alert("Error fetching geolocation.");
     }
   };
 
-  // Handle location change
-  const handleLocationChange = (e) => {
-    setLocation(e.target.value);
-  };
-
-  // Handle distance change
-  const handleDistanceChange = (e) => {
-    setDistance(e.target.value);
-  };
-
-  // Toggle Menu visibility
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget); // Show the menu
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null); // Close the menu
-  };
+  const handleClose = () => setAnchorEl(null);
+  const handleLocationChange = (e) => setLocation(e.target.value);
+  const handleDistanceChange = (e) => setDistance(e.target.value);
 
   return (
     <Box
@@ -118,11 +115,8 @@ export default function SearchBar({ onSearch, lat, lng }) {
         }
         onInputChange={(e, val) => setSearchTerm(val)}
         onChange={(e, val) => {
-          if (typeof val === "string") {
-            handleSearch(val);
-          } else if (val?.name) {
-            handleSearch(val.name);
-          }
+          if (typeof val === "string") handleSearch(val);
+          else if (val?.name) handleSearch(val.name);
         }}
         renderInput={(params) => (
           <TextField
@@ -149,8 +143,6 @@ export default function SearchBar({ onSearch, lat, lng }) {
         <Button
           variant="outlined"
           size="small"
-          disableElevation
-          disableRipple
           sx={{
             minWidth: "auto",
             width: "36px",
@@ -166,28 +158,20 @@ export default function SearchBar({ onSearch, lat, lng }) {
               borderColor: "primary.main",
             },
           }}
-          onClick={handleClick} // Open menu on click
+          onClick={handleClick}
         >
           <PlaceIcon fontSize="small" />
         </Button>
       </Box>
-      {/* Popover component for search and distance */}
+
       <Popover
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleClose}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "center",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "center",
-        }}
-        sx={{ width: 300 }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        transformOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Box sx={{ padding: 2 }}>
-          {/* Location input */}
+        <Box sx={{ padding: 2, width: 250 }}>
           <TextField
             fullWidth
             label="Where are you at?"
@@ -197,8 +181,6 @@ export default function SearchBar({ onSearch, lat, lng }) {
             size="small"
             sx={{ mb: 2 }}
           />
-
-          {/* Distance selection */}
           <FormControl fullWidth>
             <InputLabel>Distance</InputLabel>
             <Select

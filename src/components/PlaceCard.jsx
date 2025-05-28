@@ -33,34 +33,44 @@ export default function PlaceCard({
   const [likeCount, setLikeCount] = useState(initialLikes || 0);
 
   useEffect(() => {
-    const fetchFavorite = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await api.get("/favorites/user", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+  const fetchFavorite = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return; 
 
-        const isFavorite = res.data.some((fav) => {
+    try {
+      const res = await api.get("/favorites", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const isFavorite = res.data.some((fav) => {
         const id = fav.destinationId._id || fav.destinationId;
         return id === destinationId;
       });
-        setLiked(isFavorite);
-      } catch (err) {
-        console.error("Failed to fetch favorites:", err);
-      }
-    };
 
-    if (userId) fetchFavorite();
-  }, [destinationId, userId]);
+      setLiked(isFavorite);
+    } catch (err) {
+      console.error("Failed to fetch favorites:", err);
+    }
+  };
+
+  if (userId) fetchFavorite();
+}, [destinationId, userId]);
 
   const toggleFavorite = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.warn("User not logged in. Favorite action blocked.");
+      alert("Please log in to add or remove favorites."); 
+      return;
+    }
+
     if (onAttemptRemove) {
       onAttemptRemove(destinationId);
       return;
     }
 
     try {
-      const token = localStorage.getItem("token");
       const config = {
         headers: { Authorization: `Bearer ${token}` },
       };
