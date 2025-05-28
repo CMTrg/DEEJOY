@@ -6,28 +6,88 @@ import {
   CardContent,
   Stack,
   Avatar,
+  IconButton,
 } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShareIcon from "@mui/icons-material/Share";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import StarIcon from "@mui/icons-material/Star";
-import { flexbox } from "@mui/system";
+import { useEffect, useState } from "react";
+import api from "../api/api";
 
 export default function PlaceCard({
+  destinationId,
+  userId,
   image,
   title,
   address,
   rating,
   description,
-  likes,
   shares,
   comments,
+  initialLikes,
+  onAttemptRemove,
 }) {
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(initialLikes || 0);
+
+  useEffect(() => {
+    const fetchFavorite = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await api.get("/favorites/user", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const isFavorite = res.data.some((fav) => {
+        const id = fav.destinationId._id || fav.destinationId;
+        return id === destinationId;
+      });
+        setLiked(isFavorite);
+      } catch (err) {
+        console.error("Failed to fetch favorites:", err);
+      }
+    };
+
+    if (userId) fetchFavorite();
+  }, [destinationId, userId]);
+
+  const toggleFavorite = async () => {
+    if (onAttemptRemove) {
+      onAttemptRemove(destinationId);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+
+      if (liked) {
+        await api.delete("/favorites", {
+          ...config,
+          data: { destinationId },
+        });
+        setLiked(false);
+        setLikeCount((prev) => prev - 1);
+      } else {
+        await api.post("/favorites", { destinationId }, config);
+        setLiked(true);
+        setLikeCount((prev) => prev + 1);
+      }
+    } catch (err) {
+      console.error("Error toggling favorite:", err);
+    }
+  };
+
+
   return (
     <Card
       sx={{
-        width: "100%", // chiếm trọn ô của grid
-        maxWidth: "270px", // không vượt quá
+        width: "100%",
+        maxWidth: "270px",
         height: 345,
         borderRadius: "20px",
         overflow: "hidden",
@@ -48,7 +108,7 @@ export default function PlaceCard({
         position: "relative",
       }}
     >
-      {/* Rating badge */}
+      
       <Box
         sx={{
           position: "absolute",
@@ -98,25 +158,18 @@ export default function PlaceCard({
       </CardContent>
 
       <Box sx={{ position: "relative", width: "90%" }}>
-        <Box
-          sx={{
-            position: "relative",
-            width: "100%",
-            height: "auto",
-          }}
-        >
+        <Box sx={{ position: "relative", width: "100%", height: "auto" }}>
           <CardMedia
             component="img"
             image={image}
             alt={title}
             sx={{
               width: "100%",
-              height: 140, 
+              height: 140,
               objectFit: "cover",
               borderRadius: "10px",
             }}
           />
-          {/* Avatar on image */}
           <Avatar
             sx={{
               position: "absolute",
@@ -133,7 +186,6 @@ export default function PlaceCard({
           </Avatar>
         </Box>
 
-        {/* Description box */}
         <Box
           sx={{
             bgcolor: (theme) =>
@@ -163,24 +215,41 @@ export default function PlaceCard({
           </Typography>
           <Typography
             variant="caption"
-            sx={{ color: "primary.text", fontWeight: 500,
-        cursor: 'pointer', '&:hover' : {color: 'primary.texthover'} }}
+            sx={{
+              color: "primary.text",
+              fontWeight: 500,
+              cursor: "pointer",
+              "&:hover": { color: "primary.texthover" },
+            }}
           >
             see more...
           </Typography>
         </Box>
       </Box>
 
-      {/* Icons row */}
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        sx={{ px: 1.5, mb: 1, width: '100%' }}
+        sx={{ px: 1.5, mb: 1, width: "100%" }}
       >
-        <IconWithText icon={<FavoriteBorderIcon />} text={likes} />
-        <IconWithText icon={<ChatBubbleOutlineIcon />} text={comments} />
-        <IconWithText icon={<ShareIcon />} text={shares} />
+        <IconWithText
+          icon={
+            <IconButton onClick={toggleFavorite} sx={{ p: 0.5 }}>
+              {liked ? (
+                <FavoriteIcon color="error" fontSize="small" />
+              ) : (
+                <FavoriteBorderIcon fontSize="small" />
+              )}
+            </IconButton>
+          }
+          text={likeCount}
+        />
+        <IconWithText
+          icon={<ChatBubbleOutlineIcon fontSize="small" />}
+          text={comments}
+        />
+        <IconWithText icon={<ShareIcon fontSize="small" />} text={shares} />
       </Stack>
     </Card>
   );

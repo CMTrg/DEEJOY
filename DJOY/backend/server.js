@@ -11,6 +11,7 @@ import { connectDB } from "./config/db.js";
 import destinationRoutes from "./routes/destinationRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
+import favoriteRoutes from "./routes/favoriteRoutes.js";
 import googleAuthRoutes from "./routes/authRoutes.js";
 
 const app = express();
@@ -38,8 +39,9 @@ app.get("/", (req, res) => {
 
 app.use("/api/destinations", destinationRoutes);
 app.use("/api/users", userRoutes);
-app.use("/auth", googleAuthRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/favorites", favoriteRoutes);
+app.use("/auth", googleAuthRoutes);
 
 
 connectDB().then(() => {

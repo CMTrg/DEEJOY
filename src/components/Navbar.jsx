@@ -183,82 +183,69 @@ export default function Navbar() {
 
           <ThemeModeSelect />
 
-          {user && (
-            <Box>
-              <Avatar
-                src={getAvatarSrc()}
-                alt={user?.username || "User Avatar"}
-                sx={{
-                  width: 32,
-                  height: 32,
-                  bgcolor: "beige",
-                  fontSize: 14,
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                }}
-                onClick={handleAvatarClick}
-              >
-                {!user?.profilePicture && user?.username?.[0]}
-              </Avatar>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                PaperProps={{
-                  sx: {
-                    borderRadius: 2,
-                    minWidth: 180,
-                    mt: 1,
-                    boxShadow:
-                      theme.palette.mode === "dark"
-                        ? "0 4px 20px rgba(0,0,0,0.5)"
-                        : "0 4px 20px rgba(0,0,0,0.1)",
-                    backgroundColor:
-                      theme.palette.mode === "dark"
-                        ? "rgba(30, 30, 60, 0.95)"
-                        : "rgba(255, 255, 255, 0.95)",
-                    backdropFilter: "blur(8px)",
-                  },
-                }}
-              >
-                <MenuItem
-                  onClick={handleMenuClose}
-                  component={Link}
-                  to="/settings"
-                  sx={{
-                    gap: 1.5,
-                    py: 1.2,
-                    "&:hover": {
-                      backgroundColor:
-                        theme.palette.mode === "dark"
-                          ? "rgba(100, 100, 180, 0.2)"
-                          : "rgba(180, 200, 255, 0.2)",
-                    },
-                  }}
-                >
-                  <SettingsIcon fontSize="small" />
-                  Settings
-                </MenuItem>
-                <MenuItem
-                  onClick={handleLogout}
-                  sx={{
-                    gap: 1.5,
-                    py: 1.2,
-                    "&:hover": {
-                      backgroundColor:
-                        theme.palette.mode === "dark"
-                          ? "rgba(180, 60, 60, 0.2)"
-                          : "rgba(255, 100, 100, 0.2)",
-                    },
-                  }}
-                >
-                  <LogoutIcon fontSize="small" />
-                  Logout
-                </MenuItem>
-              </Menu>
+          <Box>
+          <Avatar
+            src={getAvatarSrc()}
+            alt={user?.username || "Guest"}
+            sx={{
+              width: 32,
+              height: 32,
+              bgcolor: getAvatarSrc() ? "transparent" : "gray",
+              fontSize: 14,
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+            onClick={(event) => {
+              if (user) {
+                setAnchorEl(event.currentTarget);
+              } else {
+                navigate("/auth");
+              }
+            }}
+          >
+            {/* Nếu không có ảnh thì hiển thị ký tự đầu hoặc G */}
+            {!getAvatarSrc() && (user?.username?.[0]?.toUpperCase() || "G")}
+          </Avatar>
 
-            </Box>
+          {/* Chỉ hiện menu nếu đã login */}
+          {user && (
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+              PaperProps={{
+                sx: {
+                  borderRadius: 2,
+                  minWidth: 180,
+                  mt: 1,
+                  boxShadow:
+                    theme.palette.mode === "dark"
+                      ? "0 4px 20px rgba(0,0,0,0.5)"
+                      : "0 4px 20px rgba(0,0,0,0.1)",
+                  backgroundColor:
+                    theme.palette.mode === "dark"
+                      ? "rgba(30, 30, 60, 0.95)"
+                      : "rgba(255, 255, 255, 0.95)",
+                  backdropFilter: "blur(8px)",
+                },
+              }}
+            >
+              <MenuItem
+                onClick={handleMenuClose}
+                component={Link}
+                to="/settings"
+                sx={{ gap: 1.5, py: 1.2 }}
+              >
+                <SettingsIcon fontSize="small" />
+                Settings
+              </MenuItem>
+              <MenuItem onClick={handleLogout} sx={{ gap: 1.5, py: 1.2 }}>
+                <LogoutIcon fontSize="small" />
+                Logout
+              </MenuItem>
+            </Menu>
           )}
+        </Box>
 
           <IconButton
             edge="end"

@@ -1,66 +1,60 @@
-import { Box, Typography, Pagination } from "@mui/material";
-import Navbar from "../components/Navbar";
-import AnimatedBackground from "../components/AnimatedBackground.jsx";
-import PlaceCard from "../components/PlaceCard.jsx";
-import Footer from "../components/Footer.jsx";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { Box, Typography, Dialog, DialogTitle, DialogActions, Button } from "@mui/material";
+import api from "../api/api";
+import PlaceCard from "../components/PlaceCard";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import AnimatedBackground from "../components/AnimatedBackground";
 
-export default function Favourite() {
-  const [places, setPlaces] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const placesPerPage = 8;
+export default function Favorite() {
+  const [favorites, setFavorites] = useState([]);
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, destinationId: null });
+
+  const fetchFavorites = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await api.get("/favorites", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setFavorites(res.data);
+    } catch (err) {
+      console.error("Error fetching favorites:", err);
+    }
+  };
 
   useEffect(() => {
-    const target = document.getElementById("favourite-section");
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth" });
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-
-        try {
-          const res = await axios.get(
-            `http://localhost:4000/api/destinations/explore/random?lat=${latitude}&lng=${longitude}`
-          );
-          console.log("API response:", res.data);
-
-          if (res.data?.places) {
-            setPlaces(res.data.places);
-          } else {
-            console.warn("Unexpected API structure", res.data);
-          }
-        } catch (err) {
-          console.error("Failed to fetch destinations", err);
-        }
-      },
-      (err) => {
-        console.error("Location access denied:", err);
-      }
-    );
+    fetchFavorites();
   }, []);
 
-  const indexOfLastPlace = currentPage * placesPerPage;
-  const indexOfFirstPlace = indexOfLastPlace - placesPerPage;
-  const currentPlaces = places.slice(indexOfFirstPlace, indexOfLastPlace);
-  const pageCount = Math.ceil(places.length / placesPerPage);
+  const handleRemoveRequest = (destinationId) => {
+    setConfirmDialog({ open: true, destinationId });
+  };
 
-  const handlePageChange = (event, value) => {
-    setCurrentPage(value);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const handleConfirmRemove = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await api.delete("/favorites", {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { destinationId: confirmDialog.destinationId },
+      });
+      setConfirmDialog({ open: false, destinationId: null });
+      fetchFavorites();
+    } catch (err) {
+      console.error("Failed to remove favorite:", err);
+    }
+  };
+
+  const handleCancelRemove = () => {
+    setConfirmDialog({ open: false, destinationId: null });
   };
 
   return (
-    <Box sx={{ mt: "80px" }}>
-      <Navbar />
+    <Box>
       <AnimatedBackground />
+      <Navbar />
 
       <Box
-        id="favourite-section"
         sx={{
-          scrollMarginTop: "70px",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -77,57 +71,61 @@ export default function Favourite() {
           sx={{
             fontFamily: "'Outfit', sans-serif",
             letterSpacing: "0.2rem",
-            mt: "1rem",
+            mt: "6rem",
+            mb: 2,
           }}
         >
-          FAVOURITE
+          Your Favorite Places
         </Typography>
 
-        <Box
-          sx={{
-            width: { md: "80%", xs: "100%" },
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "repeat(2, 1fr)",
-              md: "repeat(4, 1fr)",
-            },
-            gap: "20px",
-            justifyItems: "center",
-            p: 1,
-          }}
-        >
-          {currentPlaces.length > 0 ? (
-            currentPlaces.map((place) => (
+        {favorites.length === 0 ? (
+          <Typography variant="body1">No favorites yet.</Typography>
+        ) : (
+          <Box
+            sx={{
+              width: { md: "80%", xs: "100%" },
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "repeat(2, 1fr)",
+                md: "repeat(4, 1fr)",
+              },
+              gap: "20px",
+              justifyItems: "center",
+              p: 1,
+            }}
+          >
+            {favorites.map((fav) => (
               <PlaceCard
-                key={place._id || place.foursquareId}
-                image={place.images?.[0]}
-                title={place.name}
-                address={place.address || "Address unavailable"}
-                rating={place.rating || 0}
-                description={`Category: ${place.category || "Unknown"}`}
-                likes={place.favoritesCount || "0"}
-                shares={place.sharedCount || "0"}
-                comments={place.reviewCount || "0"}
-              />
-            ))
-          ) : (
-            <Typography variant="body1" sx={{ mt: 2 }}>
-              Fetching destinations...
-            </Typography>
-          )}
-        </Box>
+              destinationId={fav.destinationId._id}
+              userId={fav.userId}
+              image={fav.destinationId.images?.[0]}
+              title={fav.destinationId.name}
+              address={fav.destinationId.address || "Address unavailable"}
+              rating={fav.destinationId.rating || 0}
+              description={`Category: ${fav.destinationId.category || "Unknown"}`}
+              shares={fav.destinationId.sharedCount || "0"}
+              comments={fav.destinationId.reviewCount || "0"}
+              initialLikes={fav.destinationId.favoritesCount || "0"}
+              onAttemptRemove={() => handleRemoveRequest(fav.destinationId._id)}
+            />
 
-        {pageCount > 1 && (
-          <Pagination
-            count={pageCount}
-            page={currentPage}
-            onChange={handlePageChange}
-            shape="rounded"
-            color="secondary"
-            sx={{ mt: 2 }}
-          />
+            ))}
+          </Box>
         )}
       </Box>
+
+      <Dialog open={confirmDialog.open} onClose={handleCancelRemove}>
+        <DialogTitle>Are you sure you want to remove this from favorites?</DialogTitle>
+        <DialogActions>
+          <Button onClick={handleCancelRemove} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmRemove} color="error">
+            Remove
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Footer />
     </Box>
   );

@@ -172,6 +172,7 @@ export default function Home() {
             currentPlaces.map((place) => (
               <PlaceCard
                 key={place._id || place.foursquareId}
+                destinationId={place._id}
                 image={place.images?.[0]}
                 title={place.name}
                 address={place.address || "Address unavailable"}
