@@ -89,8 +89,6 @@ export default function Navbar() {
             to="/blog" sx={{ color: "text.primary" }}>Blog</Button>
             <Button component={Link}
             to="/about" sx={{ color: "text.primary" }}>About</Button>
-            <Button component={Link}
-            to="/auth" sx={{ color: "text.primary" }}>Auth</Button>
           </Box>
 
           <ThemeModeSelect />

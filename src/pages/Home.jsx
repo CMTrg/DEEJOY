@@ -1,10 +1,11 @@
-import { Box, Typography, Pagination } from "@mui/material";
+import { Box, Typography, Pagination, CircularProgress } from "@mui/material";
 import Navbar from "../components/Navbar.jsx";
 import AnimatedBackground from "../components/AnimatedBackground.jsx";
 import SearchBar from "./Home/components/SearchBar.jsx";
 import CategoryFilters from "./Home/components/CategoryFilters.jsx";
 import PlaceCard from "../components/PlaceCard.jsx";
 import Footer from "../components/Footer.jsx";
+import PlaceDetail from "../components/PlaceDetailOverlay.jsx";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -13,6 +14,7 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
+  const [selectedPlace, setSelectedPlace] = useState(null);
   const placesPerPage = 8;
 
   useEffect(() => {
@@ -43,7 +45,6 @@ export default function Home() {
   }, []);
 
   const handleSearch = async (searchTerm) => {
-    console.log("Search term received:", searchTerm);
     if (!searchTerm.trim()) return;
 
     if (lat === null || lng === null) {
@@ -52,15 +53,17 @@ export default function Home() {
     }
 
     try {
-      const res = await axios.get("http://localhost:4000/api/destinations/search", {
-        params: {
-          query: searchTerm,
-          lat,
-          lng
+      const res = await axios.get(
+        "http://localhost:4000/api/destinations/search",
+        {
+          params: {
+            query: searchTerm,
+            lat,
+            lng,
+          },
         }
-      });
+      );
 
-      console.log("Search response:", res.data);
       setPlaces(res.data);
       setCurrentPage(1);
     } catch (err) {
@@ -78,120 +81,148 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handlePlaceClick = (placeData) => {
+    setSelectedPlace(placeData);
+  };
+
   return (
-    <Box>
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <AnimatedBackground />
       <Navbar />
-      <Box sx={{ position: 'relative' }}>
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: "url('/herobg.jpg')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            mixBlendMode: "overlay",
-            opacity: 0.75,
-            zIndex: 1,
-            mt: "58px",
-            height: { xs: "250px", sm: "35vh" },
-          }}
-        />
+      <Box sx={{ flexGrow: 1 }}>
+        {/* Hero Section */}
+        <Box sx={{ position: "relative" }}>
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: "url('/herobg.jpg')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              mixBlendMode: "overlay",
+              opacity: 0.75,
+              zIndex: 1,
+              mt: "58px",
+              height: { xs: "250px", sm: "35vh" },
+            }}
+          />
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Box
+              sx={{
+                position: "relative",
+                zIndex: 2,
+                mt: "58px",
+                height: { xs: "250px", sm: "35vh" },
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <SearchBar onSearch={handleSearch} lat={lat} lng={lng} />
+              <CategoryFilters />
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Main Content */}
         <Box
           sx={{
             display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
             justifyContent: "center",
+            alignItems: "center",
+            flexDirection: "column",
+            width: "100%",
+            gap: 1,
+            mb: 20,
           }}
         >
-          <Box
+          <Typography
+            variant="h4"
+            fontWeight="bold"
+            color="text.primary"
             sx={{
-              position: "relative",
-              zIndex: 2,
-              mt: "58px",
-              height: { xs: "250px", sm: "35vh" },
-              width: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
+              fontFamily: "'Outfit', sans-serif",
+              letterSpacing: "0.2rem",
+              mt: "1rem",
             }}
           >
-            <SearchBar onSearch={handleSearch} lat={lat} lng={lng} />
-            <CategoryFilters />
-          </Box>
-        </Box>
-      </Box>
+            RANDOM
+          </Typography>
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-          width: "100%",
-          gap: 1,
-          mb: 20,
-        }}
-      >
-        <Typography
-          variant="h4"
-          fontWeight="bold"
-          color="text.primary"
-          sx={{
-            fontFamily: "'Outfit', sans-serif",
-            letterSpacing: "0.2rem",
-            mt: "1rem",
-          }}
-        >
-          RANDOM
-        </Typography>
+          {/* Overlay Detail */}
+          {selectedPlace && (
+            <PlaceDetail
+              open={Boolean(selectedPlace)}
+              data={selectedPlace}
+              onClose={() => setSelectedPlace(null)}
+            />
+          )}
 
-        <Box
-          sx={{
-            width: { md: "80%", xs: "100%" },
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "repeat(2, 1fr)",
-              md: "repeat(4, 1fr)",
-            },
-            gap: "20px",
-            justifyItems: "center",
-            p: 1,
-          }}
-        >
+          {/* Grid of Places */}
           {currentPlaces.length > 0 ? (
-            currentPlaces.map((place) => (
-              <PlaceCard
-                key={place._id || place.foursquareId}
-                image={place.images?.[0]}
-                title={place.name}
-                address={place.address || "Address unavailable"}
-                rating={place.rating || 0}
-                description={`Category: ${place.category || "Unknown"}`}
-                likes={place.favoritesCount || "0"}
-                shares={place.sharedCount || "0"}
-                comments={place.reviewCount || "0"}
-              />
-            ))
+            <Box
+              sx={{
+                width: { md: "80%", xs: "100%" },
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "repeat(2, 1fr)",
+                  md: "repeat(4, 1fr)",
+                },
+                gap: "20px",
+                justifyItems: "center",
+                p: 1,
+              }}
+            >
+              {currentPlaces.map((place) => (
+                <PlaceCard
+                  key={place._id || place.foursquareId}
+                  image={place.images?.[0]}
+                  title={place.name}
+                  address={place.address || "Address unavailable"}
+                  rating={place.rating || 0}
+                  description={`Category: ${place.category || "Unknown"}`}
+                  likes={place.favoritesCount || "0"}
+                  shares={place.sharedCount || "0"}
+                  comments={place.reviewCount || "0"}
+                  onClick={handlePlaceClick}
+                />
+              ))}
+            </Box>
           ) : (
-            <Typography variant="body1" sx={{ mt: 2 }}>
-              Fetching destinations...
-            </Typography>
+            <Box
+              sx={{
+                width: "100%",
+                minHeight: "60vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <CircularProgress color="primary" size={48} thickness={4} />
+            </Box>
+          )}
+
+          {/* Pagination */}
+          {pageCount > 1 && (
+            <Pagination
+              count={pageCount}
+              page={currentPage}
+              onChange={handlePageChange}
+              shape="rounded"
+              color="secondary"
+              sx={{ mt: 2 }}
+            />
           )}
         </Box>
-
-        {pageCount > 1 && (
-          <Pagination
-            count={pageCount}
-            page={currentPage}
-            onChange={handlePageChange}
-            shape="rounded"
-            color="secondary"
-            sx={{ mt: 2 }}
-          />
-        )}
       </Box>
 
       <Footer />

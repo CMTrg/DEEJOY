@@ -22,10 +22,14 @@ export default function PlaceCard({
   likes,
   shares,
   comments,
+  onClick,
 }) {
   return (
-    <Card
+    <Card   onClick={() => onClick && onClick({
+      image, title, address, rating, description, likes, shares, comments
+    })}
       sx={{
+        cursor: "pointer",
         width: "100%", // chiếm trọn ô của grid
         maxWidth: "270px", // không vượt quá
         height: 345,
@@ -84,7 +88,7 @@ export default function PlaceCard({
           variant="subtitle1"
           fontWeight="800"
           color="text.primary"
-          sx={{ fontFamily: "Outfit" }}
+          sx={{ fontFamily: "Outfit", width: "80%" }}
         >
           {title}
         </Typography>
@@ -111,7 +115,7 @@ export default function PlaceCard({
             alt={title}
             sx={{
               width: "100%",
-              height: 140, 
+              height: 140,
               objectFit: "cover",
               borderRadius: "10px",
             }}
@@ -163,8 +167,12 @@ export default function PlaceCard({
           </Typography>
           <Typography
             variant="caption"
-            sx={{ color: "primary.text", fontWeight: 500,
-        cursor: 'pointer', '&:hover' : {color: 'primary.texthover'} }}
+            sx={{
+              color: "primary.text",
+              fontWeight: 500,
+              cursor: "pointer",
+              "&:hover": { color: "primary.texthover" },
+            }}
           >
             see more...
           </Typography>
@@ -176,7 +184,7 @@ export default function PlaceCard({
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        sx={{ px: 1.5, mb: 1, width: '100%' }}
+        sx={{ px: 1.5, mb: 1, width: "100%" }}
       >
         <IconWithText icon={<FavoriteBorderIcon />} text={likes} />
         <IconWithText icon={<ChatBubbleOutlineIcon />} text={comments} />
@@ -194,3 +202,4 @@ function IconWithText({ icon, text }) {
     </Box>
   );
 }
+
