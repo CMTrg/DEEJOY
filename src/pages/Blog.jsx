@@ -8,6 +8,8 @@ import SamplePostList from "../components/SamplePostList";
 import api from "../api/api";
 
 function Blog() {
+  const [selectedPost, setSelectedPost] = useState(null);
+
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +39,11 @@ function Blog() {
         alignItems: "center",
       }}
     >
+      <AnimatedBackground />
+      <Navbar />
+      <BlogPostInput />
+      <SamplePostList selectedPost={selectedPost} setSelectedPost={setSelectedPost} />
+      <Footer sx={{ position: "relative" }} />
       <AnimatedBackground />
       <Navbar />
       <BlogPostInput onPostSuccess={fetchReviews} />

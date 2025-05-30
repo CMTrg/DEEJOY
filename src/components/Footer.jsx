@@ -1,5 +1,7 @@
 // src/components/Footer.jsx
 import { Box, Typography } from "@mui/material";
+import { Link } from "react-router-dom";
+
 
 export default function Footer() {
   return (
@@ -23,7 +25,9 @@ export default function Footer() {
         variant="body2"
         sx={{ mr: '2.5%', 
             cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
-      >
+      
+            component={Link}
+            to="/about">
         About us
       </Typography>
     </Box>

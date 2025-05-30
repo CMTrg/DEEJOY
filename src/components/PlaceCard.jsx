@@ -26,6 +26,8 @@ export default function PlaceCard({
   description,
   shares,
   comments,
+  onClick,
+}) {
   initialLikes,
   onAttemptRemove,
 }) {
@@ -94,10 +96,13 @@ export default function PlaceCard({
 
 
   return (
-    <Card
+    <Card   onClick={() => onClick && onClick({
+      image, title, address, rating, description, likes, shares, comments
+    })}
       sx={{
-        width: "100%",
-        maxWidth: "270px",
+        cursor: "pointer",
+        width: "100%", // chiếm trọn ô của grid
+        maxWidth: "270px", // không vượt quá
         height: 345,
         borderRadius: "20px",
         overflow: "hidden",
@@ -154,7 +159,7 @@ export default function PlaceCard({
           variant="subtitle1"
           fontWeight="800"
           color="text.primary"
-          sx={{ fontFamily: "Outfit" }}
+          sx={{ fontFamily: "Outfit", width: "80%" }}
         >
           {title}
         </Typography>
@@ -273,3 +278,4 @@ function IconWithText({ icon, text }) {
     </Box>
   );
 }
+
