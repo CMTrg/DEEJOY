@@ -218,8 +218,10 @@ export default function Home() {
               />
             ))
           ) : (
-            <Typography variant="body1" sx={{ mt: 2 }}>
-              Fetching destinations...
+            <Typography variant="body1" sx={{ mt: 2, fontStyle: "italic" }}>
+              {lat == null || lng == null
+                ? "Please wait while we locate your position..."
+                : "Fetching destinations..."}
             </Typography>
           )}
         </Box>
