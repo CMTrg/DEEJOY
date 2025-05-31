@@ -1,22 +1,24 @@
-import { Box, Typography, Pagination, CircularProgress } from "@mui/material";
+import { 
+  Box,
+  Typography,
+  Pagination,
+  CircularProgress
+} from "@mui/material";
 import Navbar from "../components/Navbar.jsx";
 import AnimatedBackground from "../components/AnimatedBackground.jsx";
 import SearchBar from "./Home/components/SearchBar.jsx";
 import CategoryFilters from "./Home/components/CategoryFilters.jsx";
 import PlaceCard from "../components/PlaceCard.jsx";
 import Footer from "../components/Footer.jsx";
-import PlaceDetail from "../components/PlaceDetailOverlay.jsx";
 import { useEffect, useState } from "react";
 import api from "../api/api";
 import { useLocation } from "../LocationContext";
 
 export default function Home() {
-  const { lat: contextLat, lng: contextLng } = useLocation(); 
+  const { lat: contextLat, lng: contextLng } = useLocation();
   const [manualLatLng, setManualLatLng] = useState(null);
   const [places, setPlaces] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [lat, setLat] = useState(null);
-  const [lng, setLng] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const placesPerPage = 8;
 
@@ -54,35 +56,7 @@ export default function Home() {
       return;
     }
 
-    if (!searchTerm) {
-      try {
-        const res = await api.get("/destinations/explore/random", {
-          params: { lat, lng },
-        });
-        const uniquePlaces = Array.from(
-          new Map(res.data.places.map(p => [(p._id || p.foursquareId), p])).values()
-        );
-        setPlaces(uniquePlaces);
-        setCurrentPage(1);
-      } catch (err) {
-        console.error("Failed to fetch random destinations", err);
-      }
-      return;
-    }
-
     try {
-      const res = await axios.get(
-        "http://localhost:4000/api/destinations/search",
-        {
-          params: {
-            query: searchTerm,
-            lat,
-            lng,
-          },
-        }
-      );
-
-      setPlaces(res.data);
       const res = await api.get("/destinations/search", {
         params: { query: searchTerm, lat, lng },
       });
@@ -95,7 +69,6 @@ export default function Home() {
       console.error("Search failed:", err);
     }
   };
-
 
   const handleCategorySelect = async (category) => {
     if (lat === null || lng === null) {
@@ -121,7 +94,6 @@ export default function Home() {
     }
   };
 
-
   const indexOfLastPlace = currentPage * placesPerPage;
   const indexOfFirstPlace = indexOfLastPlace - placesPerPage;
   const currentPlaces = places.slice(indexOfFirstPlace, indexOfLastPlace);
@@ -140,49 +112,8 @@ export default function Home() {
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <AnimatedBackground />
       <Navbar />
-      <Box sx={{ flexGrow: 1 }}>
-        {/* Hero Section */}
-        <Box sx={{ position: "relative" }}>
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              backgroundImage: "url('/herobg.jpg')",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              mixBlendMode: "overlay",
-              opacity: 0.75,
-              zIndex: 1,
-              mt: "58px",
-              height: { xs: "250px", sm: "35vh" },
-            }}
-          />
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Box
-              sx={{
-                position: "relative",
-                zIndex: 2,
-                mt: "58px",
-                height: { xs: "250px", sm: "35vh" },
-                width: "100%",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <SearchBar onSearch={handleSearch} lat={lat} lng={lng} />
-              <CategoryFilters />
-            </Box>
-          </Box>
-        </Box>
+
+      {/* Hero Section */}
       <Box sx={{ position: "relative" }}>
         <Box
           sx={{
@@ -200,72 +131,66 @@ export default function Home() {
         />
         <Box
           sx={{
+            position: "relative",
+            zIndex: 2,
+            mt: "58px",
+            height: { xs: "250px", sm: "35vh" },
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
             justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          <Box
-            sx={{
-              position: "relative",
-              zIndex: 2,
-              mt: "58px",
-              height: { xs: "250px", sm: "35vh" },
-              width: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <SearchBar
-              lat={lat}
-              lng={lng}
-              setLatLng={setManualLatLng} 
-              onSearch={handleSearch}
-            />
-            <CategoryFilters onCategorySelect={handleCategorySelect} />
-          </Box>
+          <SearchBar lat={lat} lng={lng} setLatLng={setManualLatLng} onSearch={handleSearch} />
+          <CategoryFilters onCategorySelect={handleCategorySelect} />
         </Box>
       </Box>
 
-        {/* Main Content */}
-        <Box
+      {/* Main Content */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 2,
+          mb: 20,
+        }}
+      >
+        <Typography
+          variant="h4"
+          fontWeight="bold"
           sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            flexDirection: "column",
-            width: "100%",
-            gap: 1,
-            mb: 20,
+            mt: "1rem",
+            fontFamily: "'Outfit', sans-serif",
+            letterSpacing: "0.2rem",
           }}
         >
-          <Typography
-            variant="h4"
-            fontWeight="bold"
-            color="text.primary"
+          RANDOM
+        </Typography>
+
+
+        {places.length === 0 ? (
+          <Box
             sx={{
-              fontFamily: "'Outfit', sans-serif",
-              letterSpacing: "0.2rem",
-              mt: "1rem",
+              width: "100%",
+              minHeight: "60vh",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 2,
             }}
           >
-            RANDOM
-          </Typography>
-
-          {/* Overlay Detail */}
-          {selectedPlace && (
-            <PlaceDetail
-              open={Boolean(selectedPlace)}
-              data={selectedPlace}
-              onClose={() => setSelectedPlace(null)}
-            />
-          )}
-
-          {/* Grid of Places */}
-          {currentPlaces.length > 0 ? (
+            <CircularProgress color="primary" size={48} thickness={4} />
+            <Typography variant="body1" sx={{ fontStyle: "italic" }}>
+              {lat == null || lng == null
+                ? "Please wait while we locate your position..."
+                : "Fetching destinations..."}
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            {/* Grid */}
             <Box
               sx={{
                 width: { md: "80%", xs: "100%" },
@@ -282,6 +207,7 @@ export default function Home() {
               {currentPlaces.map((place) => (
                 <PlaceCard
                   key={place._id || place.foursquareId}
+                  destinationId={place._id}
                   image={place.images?.[0]}
                   title={place.name}
                   address={place.address || "Address unavailable"}
@@ -294,65 +220,20 @@ export default function Home() {
                 />
               ))}
             </Box>
-        <Box
-          sx={{
-            width: { md: "80%", xs: "100%" },
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "repeat(2, 1fr)",
-              md: "repeat(4, 1fr)",
-            },
-            gap: "20px",
-            justifyItems: "center",
-            p: 1,
-          }}
-        >
-          {currentPlaces.length > 0 ? (
-            currentPlaces.map((place) => (
-              <PlaceCard
-                key={place._id || place.foursquareId}
-                destinationId={place._id}
-                image={place.images?.[0]}
-                title={place.name}
-                address={place.address || "Address unavailable"}
-                rating={place.rating || 0}
-                description={`Category: ${place.category || "Unknown"}`}
-                likes={place.favoritesCount || "0"}
-                shares={place.sharedCount || "0"}
-                comments={place.reviewCount || "0"}
-              />
-            ))
-          ) : (
-            <Box
-              sx={{
-                width: "100%",
-                minHeight: "60vh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <CircularProgress color="primary" size={48} thickness={4} />
-            </Box>
-            <Typography variant="body1" sx={{ mt: 2, fontStyle: "italic" }}>
-              {lat == null || lng == null
-                ? "Please wait while we locate your position..."
-                : "Fetching destinations..."}
-            </Typography>
-          )}
 
-          {/* Pagination */}
-          {pageCount > 1 && (
-            <Pagination
-              count={pageCount}
-              page={currentPage}
-              onChange={handlePageChange}
-              shape="rounded"
-              color="secondary"
-              sx={{ mt: 2 }}
-            />
-          )}
-        </Box>
+            {/* Pagination */}
+            {pageCount > 1 && (
+              <Pagination
+                count={pageCount}
+                page={currentPage}
+                onChange={handlePageChange}
+                shape="rounded"
+                color="secondary"
+                sx={{ mt: 2 }}
+              />
+            )}
+          </>
+        )}
       </Box>
 
       <Footer />

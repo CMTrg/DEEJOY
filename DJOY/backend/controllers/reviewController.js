@@ -246,16 +246,23 @@ export const editComment = async (req, res) => {
 
 export const addCommentToReview = async (req, res) => {
   try {
-    const { reviewId, text, image } = req.body;
+    const { text } = req.body;
+    const { reviewId } = req.params;
     const userId = req.user.userId;
+
+    console.log("Review ID:", reviewId);
+    console.log("Text:", text);
+    console.log("File:", req.file);
 
     const review = await Review.findById(reviewId);
     if (!review) return res.status(404).json({ message: "Review not found" });
 
+    const imageUrl = req.file ? req.file.path : null;
+
     const newComment = new Comment({
       user: userId,
       text,
-      image: image || null 
+      image: imageUrl,
     });
 
     await newComment.save();
@@ -264,9 +271,11 @@ export const addCommentToReview = async (req, res) => {
 
     res.status(201).json({ message: "Comment added", comment: newComment });
   } catch (error) {
+    console.error("Add comment error:", error); // ✅ Log the error
     res.status(500).json({ message: error.message });
   }
 };
+
 
 export const getCommentsForReview = async (req, res) => {
   try {
@@ -274,7 +283,7 @@ export const getCommentsForReview = async (req, res) => {
 
     const review = await Review.findById(reviewId).populate({
       path: "comments",
-      populate: { path: "user", select: "name email" }
+      populate: { path: "user", select: "username profilePicture" }
     });
 
     if (!review) return res.status(404).json({ message: "Review not found" });
@@ -317,10 +326,12 @@ export const toggleLikeComment = async (req, res) => {
     const userId = req.user.userId;
     const { commentId } = req.params;
 
+    console.log("userId:", userId, "commentId:", commentId);
+
     const comment = await Comment.findById(commentId);
     if (!comment) return res.status(404).json({ message: "Comment not found" });
 
-    const alreadyLiked = comment.likes.includes(userId);
+    const alreadyLiked = comment.likes.some(id => id.toString() === userId);
 
     if (alreadyLiked) {
       comment.likes = comment.likes.filter(id => id.toString() !== userId);
@@ -335,9 +346,11 @@ export const toggleLikeComment = async (req, res) => {
       likesCount: comment.likes.length
     });
   } catch (err) {
+    console.error("Error in toggleLikeComment:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 export const replyToComment = async (req, res) => {
   try {
@@ -363,7 +376,7 @@ export const replyToComment = async (req, res) => {
 export const getReviewLikes = async (req, res) => {
   try {
     const { reviewId } = req.params;
-    const review = await Review.findById(reviewId).populate("likes", "name email");
+    const review = await Review.findById(reviewId).populate("likes", "username profilePicture");
     if (!review) return res.status(404).json({ message: "Review not found" });
 
     res.status(200).json({ likes: review.likes });
@@ -375,7 +388,7 @@ export const getReviewLikes = async (req, res) => {
 export const getCommentLikes = async (req, res) => {
   try {
     const { commentId } = req.params;
-    const comment = await Comment.findById(commentId).populate("likes", "name email");
+    const comment = await Comment.findById(commentId).populate("likes", "username profilePicture");
     if (!comment) return res.status(404).json({ message: "Comment not found" });
 
     res.status(200).json({ likes: comment.likes });
@@ -436,5 +449,39 @@ export const incrementReviewShareCount = async (req, res) => {
     res.status(200).json({ message: "Share count incremented", sharedCount: review.sharedCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const hasUserLikedReview = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { reviewId } = req.params;
+
+    const review = await Review.findById(reviewId);
+    if (!review) return res.status(404).json({ message: "Review not found" });
+
+    const liked = review.likes.includes(userId);
+
+    res.status(200).json({ liked });
+  } catch (error) {
+    console.error("Error checking like status:", error);
+    res.status(500).json({ message: "Server error checking like status" });
+  }
+};
+
+export const alreadyLikedComment = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { commentId } = req.params;
+
+    const comment = await Comment.findById(commentId);
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+
+    const liked = comment.likes.some(id => id.toString() === userId);
+
+    res.status(200).json({ alreadyLiked: liked });
+  } catch (err) {
+    console.error("Error in alreadyLikedComment:", err);
+    res.status(500).json({ message: err.message });
   }
 };

@@ -5,11 +5,11 @@ import AnimatedBackground from "../components/AnimatedBackground";
 import Footer from "../components/Footer";
 import BlogPostInput from "../components/BlogPostInput";
 import SamplePostList from "../components/SamplePostList";
+import BlogOverlay from "../components/BlogOverlay"; // Make sure it's imported
 import api from "../api/api";
 
 function Blog() {
   const [selectedPost, setSelectedPost] = useState(null);
-
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,6 +28,8 @@ function Blog() {
     fetchReviews();
   }, []);
 
+  const handleCloseOverlay = () => setSelectedPost(null);
+
   return (
     <Box
       sx={{
@@ -41,18 +43,19 @@ function Blog() {
     >
       <AnimatedBackground />
       <Navbar />
-      <BlogPostInput />
-      <SamplePostList selectedPost={selectedPost} setSelectedPost={setSelectedPost} />
-      <Footer sx={{ position: "relative" }} />
-      <AnimatedBackground />
-      <Navbar />
       <BlogPostInput onPostSuccess={fetchReviews} />
       <SamplePostList
+        selectedPost={selectedPost}
+        setSelectedPost={setSelectedPost}
         reviews={reviews}
         loading={loading}
         fetchReviews={fetchReviews}
       />
       <Footer sx={{ position: "relative" }} />
+
+      {selectedPost && (
+        <BlogOverlay post={selectedPost} onClose={handleCloseOverlay} />
+      )}
     </Box>
   );
 }
