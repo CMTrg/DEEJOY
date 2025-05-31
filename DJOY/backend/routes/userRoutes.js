@@ -23,10 +23,7 @@ router.post('/verify', verifyEmail);
 router.post("/forgot-password", forgotPassword);
 router.post('/reset-password', resetPassword);
 router.get('/profile', verifyToken, getUserProfile);
-router.put("/update/:userId", verifyToken, upload.single("avatar"), updateUserProfile);
+router.put("/update/:userId", verifyToken, upload.single("profilePicture"), updateUserProfile);
 router.delete('/:id', verifyToken, deleteUser);
-router.get('/me', verifyToken, (req, res) => {
-  res.json({ userId: req.user.id, username: req.user.username });
-});
 
 export default router;

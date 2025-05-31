@@ -187,13 +187,15 @@ export const getUserProfile = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { username, email } = req.body;
+    const { username, email, password } = req.body;
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (username) user.username = username;
-    if (email) user.email = email;
+    if (username?.trim()) user.username = username;
+    if (email?.trim()) user.email = email;
+
+    if (password?.trim()) user.password = password; 
 
     user.lastSeen = new Date();
 

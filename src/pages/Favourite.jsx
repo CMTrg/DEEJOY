@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import {
   Box,
   Typography,
@@ -7,8 +6,6 @@ import {
   DialogTitle,
   DialogActions,
   Button,
-  CircularProgress,
-  Pagination,
 } from "@mui/material";
 import api from "../api/api";
 import PlaceCard from "../components/PlaceCard";
@@ -16,14 +13,15 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AnimatedBackground from "../components/AnimatedBackground";
 
+import { useUser } from "../UserContext";  
+
 export default function Favorite() {
+  const { user, token } = useUser(); 
   const [favorites, setFavorites] = useState([]);
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
     destinationId: null,
   });
-
-  const token = localStorage.getItem("token");
 
   const fetchFavorites = async () => {
     if (!token) return;
@@ -39,7 +37,7 @@ export default function Favorite() {
 
   useEffect(() => {
     fetchFavorites();
-  }, []);
+  }, [token]); // refetch when token changes
 
   const handleRemoveRequest = (destinationId) => {
     setConfirmDialog({ open: true, destinationId });

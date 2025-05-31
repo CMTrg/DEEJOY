@@ -19,8 +19,9 @@ import MenuIcon from "@mui/icons-material/Menu";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ThemeModeSelect from "../ThemeModeContext";
+import { useUser } from "../UserContext";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import logo from "../assets/icon2.svg";
 import api from "../api/api";
 
@@ -28,30 +29,38 @@ export default function Navbar() {
   const theme = useTheme();
   const navigate = useNavigate();
 
-  const [open, setOpen] = useState(false); 
-  const [user, setUser] = useState(null); 
-  const [anchorEl, setAnchorEl] = useState(null); 
+  const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+  const { user, fetchUser, handleLogout: contextLogout } = useUser();
 
-        const res = await api.get("/users/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-        setUser(res.data);
-      } catch (error) {
-        console.error("Error fetching user profile:", error.message);
+      if (token) {
+        await api.post(
+          "/users/logout",
+          null,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
       }
-    };
 
-    fetchUserProfile();
-  }, []);
+      localStorage.removeItem("token");
+      contextLogout();
+      handleMenuClose();
+      navigate("/auth");
+    } catch (error) {
+      console.error("Error during logout:", error.message);
+      localStorage.removeItem("token");
+      contextLogout();
+      navigate("/auth");
+    }
+  };
 
   const handleAvatarClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -60,31 +69,6 @@ export default function Navbar() {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-
-  const handleLogout = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      if (token) {
-        await api.post("/users/logout", null, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      }
-
-      localStorage.removeItem("token");
-      setUser(null);
-      handleMenuClose();
-      navigate("/auth");
-    } catch (error) {
-      console.error("Error during logout:", error.message);
-      localStorage.removeItem("token");
-      setUser(null);
-      navigate("/auth");
-    }
-  };
-
 
   const getAvatarSrc = () => {
     if (!user?.profilePicture) return undefined;
@@ -144,38 +128,21 @@ export default function Navbar() {
             paddingRight: "0.5%",
           }}
         >
-
           <Box sx={{ display: { xs: "none", sm: "flex" }, gap: "10px" }}>
             <Button component={Link} to="/" sx={{ color: "text.primary" }}>
               Home
             </Button>
-            <Button
-              component={Link}
-              to="/favourite"
-              sx={{ color: "text.primary" }}
-            >
+            <Button component={Link} to="/favourite" sx={{ color: "text.primary" }}>
               Favourite
             </Button>
-            <Button
-              component={Link}
-              to="/blog"
-              sx={{ color: "text.primary" }}
-            >
+            <Button component={Link} to="/blog" sx={{ color: "text.primary" }}>
               Blog
             </Button>
-            <Button
-              component={Link}
-              to="/about"
-              sx={{ color: "text.primary" }}
-            >
+            <Button component={Link} to="/about" sx={{ color: "text.primary" }}>
               About
             </Button>
             {!user && (
-              <Button
-                component={Link}
-                to="/auth"
-                sx={{ color: "text.primary" }}
-              >
+              <Button component={Link} to="/auth" sx={{ color: "text.primary" }}>
                 Auth
               </Button>
             )}
@@ -184,68 +151,67 @@ export default function Navbar() {
           <ThemeModeSelect />
 
           <Box>
-          <Avatar
-            src={getAvatarSrc()}
-            alt={user?.username || "Guest"}
-            sx={{
-              width: 32,
-              height: 32,
-              bgcolor: getAvatarSrc() ? "transparent" : "gray",
-              fontSize: 14,
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-            onClick={(event) => {
-              if (user) {
-                setAnchorEl(event.currentTarget);
-              } else {
-                navigate("/auth");
-              }
-            }}
-          >
-            {/* Nếu không có ảnh thì hiển thị ký tự đầu hoặc G */}
-            {!getAvatarSrc() && (user?.username?.[0]?.toUpperCase() || "G")}
-          </Avatar>
-
-          {/* Chỉ hiện menu nếu đã login */}
-          {user && (
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-              PaperProps={{
-                sx: {
-                  borderRadius: 2,
-                  minWidth: 180,
-                  mt: 1,
-                  boxShadow:
-                    theme.palette.mode === "dark"
-                      ? "0 4px 20px rgba(0,0,0,0.5)"
-                      : "0 4px 20px rgba(0,0,0,0.1)",
-                  backgroundColor:
-                    theme.palette.mode === "dark"
-                      ? "rgba(30, 30, 60, 0.95)"
-                      : "rgba(255, 255, 255, 0.95)",
-                  backdropFilter: "blur(8px)",
-                },
+            <Avatar
+              src={getAvatarSrc()}
+              alt={user?.username || "Guest"}
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: getAvatarSrc() ? "transparent" : "gray",
+                fontSize: 14,
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+              onClick={(event) => {
+                if (user) {
+                  setAnchorEl(event.currentTarget);
+                } else {
+                  navigate("/auth");
+                }
               }}
             >
-              <MenuItem
-                onClick={handleMenuClose}
-                component={Link}
-                to="/settings"
-                sx={{ gap: 1.5, py: 1.2 }}
+
+              {!getAvatarSrc() && (user?.username?.[0]?.toUpperCase() || "G")}
+            </Avatar>
+
+            {user && (
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                PaperProps={{
+                  sx: {
+                    borderRadius: 2,
+                    minWidth: 180,
+                    mt: 1,
+                    boxShadow:
+                      theme.palette.mode === "dark"
+                        ? "0 4px 20px rgba(0,0,0,0.5)"
+                        : "0 4px 20px rgba(0,0,0,0.1)",
+                    backgroundColor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(30, 30, 60, 0.95)"
+                        : "rgba(255, 255, 255, 0.95)",
+                    backdropFilter: "blur(8px)",
+                  },
+                }}
               >
-                <SettingsIcon fontSize="small" />
-                Settings
-              </MenuItem>
-              <MenuItem onClick={handleLogout} sx={{ gap: 1.5, py: 1.2 }}>
-                <LogoutIcon fontSize="small" />
-                Logout
-              </MenuItem>
-            </Menu>
-          )}
-        </Box>
+                <MenuItem
+                  onClick={handleMenuClose}
+                  component={Link}
+                  to="/settings"
+                  sx={{ gap: 1.5, py: 1.2 }}
+                >
+                  <SettingsIcon fontSize="small" />
+                  Settings
+                </MenuItem>
+                <MenuItem onClick={handleLogout} sx={{ gap: 1.5, py: 1.2 }}>
+                  <LogoutIcon fontSize="small" />
+                  Logout
+                </MenuItem>
+              </Menu>
+            )}
+          </Box>
 
           <IconButton
             edge="end"

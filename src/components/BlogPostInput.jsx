@@ -15,10 +15,13 @@ import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import CloseIcon from "@mui/icons-material/Close";
 import api from "../api/api"; 
+
 import { useLocation } from "../LocationContext"; 
+import { useUser } from "../UserContext";
 
 export default function BlogPostInput({onPostSuccess}) {
   const { lat, lng } = useLocation();
+  const { token, user } = useUser();
 
   const [postText, setPostText] = useState("");
   const [images, setImages] = useState([]);
@@ -49,8 +52,7 @@ export default function BlogPostInput({onPostSuccess}) {
     }
 
     try {
-      const token = localStorage.getItem("token"); 
-      if (!token) {
+      if (!token || !user) {
         alert("You must be logged in to post a review.");
         return;
       }
