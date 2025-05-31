@@ -14,6 +14,7 @@ import reviewRoutes from "./routes/reviewRoutes.js";
 import favoriteRoutes from "./routes/favoriteRoutes.js";
 import googleAuthRoutes from "./routes/authRoutes.js";
 import geolocationRoutes from "./routes/geolocationRoutes.js";
+import destinationCommentRoutes from "./routes/destinationCommentRoutes.js";
 
 const app = express();
 const port = 4000;
@@ -44,6 +45,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/favorites", favoriteRoutes);
 app.use("/auth", googleAuthRoutes);
 app.use("/api/geolocation", geolocationRoutes);
+app.use("/api/destination-comments", destinationCommentRoutes);
 
 connectDB().then(() => {
   app.listen(port, () => {

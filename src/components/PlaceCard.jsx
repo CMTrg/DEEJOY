@@ -263,6 +263,7 @@ export default function PlaceCard({
       {detailOpen && (
         <PlaceDetailOverlay
           data={{
+            destinationId,
             image,
             title,
             address,

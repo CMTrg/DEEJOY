@@ -43,7 +43,6 @@ export default function BlogOverlay({ reviewId, post, onClose }) {
           return;
         }
 
-        // Call alreadyLikeComment API for each comment concurrently
         await Promise.all(
           commentsData.map(async (comment) => {
             try {
@@ -55,7 +54,6 @@ export default function BlogOverlay({ reviewId, post, onClose }) {
               );
               likesMap[comment._id] = likeRes.data.alreadyLiked || false;
             } catch (err) {
-              // On error, default to false
               likesMap[comment._id] = false;
             }
           })

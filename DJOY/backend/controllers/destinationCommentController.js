@@ -16,9 +16,12 @@ const updateDestinationRating = async (destinationId) => {
 
 export const addDestinationComment = async (req, res) => {
   try {
-    const { destinationId, userId, text, rating, reviewId } = req.body;
+    const userId = req.user.userId;
+    const { destinationId, text, rating, reviewId } = req.body;
 
     const imageUrl = req.file?.path || null;
+    console.log("User from token:", req.user.userId);
+    console.log("File uploaded:", imageUrl);
 
     const comment = new DestinationComment({
       destination: destinationId,
