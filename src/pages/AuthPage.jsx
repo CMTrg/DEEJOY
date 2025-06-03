@@ -24,19 +24,24 @@ export default function AuthPage() {
   const { handleLogin } = useUser();
 
   useEffect(() => {
-    const handleMessage = (event) => {
-      if (event.origin !== 'http://localhost:4000') return; 
-      const { token } = event.data;
-      if (token) {
-        localStorage.setItem('token', token);
-        navigate('/');
-      }
-    };
+  const handleMessage = (event) => {
+    console.log("Received postMessage:", event);
+  
+    if (event.origin !== 'http://localhost:4000') return;
 
-    window.addEventListener('message', handleMessage);
+    const { token, error } = event.data;
 
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
+    if (token) {
+      handleLogin(null, token);
+      navigate('/');
+    } else if (error) {
+      alert(error);
+    }
+  };
+
+  window.addEventListener('message', handleMessage);
+  return () => window.removeEventListener('message', handleMessage);
+}, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

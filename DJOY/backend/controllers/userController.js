@@ -198,7 +198,11 @@ export const updateUserProfile = async (req, res) => {
     if (username?.trim()) user.username = username;
     if (email?.trim()) user.email = email;
 
-    if (password?.trim()) user.password = password; 
+    if (password?.trim()) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+    }
+
 
     user.lastSeen = new Date();
 

@@ -10,6 +10,10 @@ export const sendVerificationEmail = async (email, code) => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    tls: {
+    rejectUnauthorized: false, 
+  },
+    
   });
 
   const mailOptions = {
@@ -47,6 +51,9 @@ export const sendResetPasswordEmail = async (email, token) => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    tls: {
+    rejectUnauthorized: false, 
+  },
   });
 
   const mailOptions = {

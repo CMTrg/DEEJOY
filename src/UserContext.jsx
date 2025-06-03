@@ -35,7 +35,7 @@ export const UserProvider = ({ children }) => {
       setUser(res.data);
     } catch (err) {
       console.error("Fetch user failed", err);
-      if (err.response?.status === 401 || err.response?.status === 403) {
+      if ([401, 403, 404].includes(err.response?.status)) {
         handleLogout();
       }
     }

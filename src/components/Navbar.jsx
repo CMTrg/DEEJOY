@@ -154,6 +154,7 @@ export default function Navbar() {
             <Avatar
               src={getAvatarSrc()}
               alt={user?.username || "Guest"}
+              imgProps={{ referrerPolicy: "no-referrer" }}
               sx={{
                 width: 32,
                 height: 32,
