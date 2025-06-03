@@ -3,6 +3,7 @@ import api from "./api/api";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 
+
 const UserContext = createContext(null);
 
 export const UserProvider = ({ children }) => {
@@ -48,6 +49,7 @@ export const UserProvider = ({ children }) => {
     setUser(userData);
     setToken(jwtToken);
     localStorage.setItem("token", jwtToken);
+    fetchUser();
   };
 
   const handleLogout = () => {

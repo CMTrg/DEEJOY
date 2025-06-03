@@ -15,11 +15,28 @@ import { motion } from 'framer-motion';
 import { useTheme } from '@mui/material/styles';
 import api from '../api/api';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../UserContext';
 
 export default function AuthPage() {
   const [tab, setTab] = useState(0);
   const theme = useTheme();
   const navigate = useNavigate();
+  const { handleLogin } = useUser();
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.origin !== 'http://localhost:4000') return; 
+      const { token } = event.data;
+      if (token) {
+        localStorage.setItem('token', token);
+        navigate('/');
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -60,14 +77,14 @@ export default function AuthPage() {
 
   const handleTabChange = (_, newValue) => setTab(newValue);
 
-  const handleLogin = async (e) => {
+  const handleFormLogin = async (e) => {
     e.preventDefault();
     try {
       const res = await api.post('/users/login', {
         username: loginUsername,
         password: loginPassword,
       });
-      localStorage.setItem('token', res.data.token);
+      handleLogin(res.data.user, res.data.token);
       alert('Login successful!');
       navigate('/');
     } catch (err) {
@@ -133,7 +150,7 @@ export default function AuthPage() {
         </Tabs>
 
         {tab === 0 ? (
-          <Box component="form" onSubmit={handleLogin}>
+          <Box component="form" onSubmit={handleFormLogin}>
             <Typography variant="h6" gutterBottom sx={{ textAlign: 'center' }}>
               Welcome Back
             </Typography>

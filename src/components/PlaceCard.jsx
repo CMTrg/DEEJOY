@@ -16,6 +16,7 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import StarIcon from "@mui/icons-material/Star";
 import { useEffect, useState } from "react";
 import api from "../api/api";
+import { useUser } from "../UserContext";
 
 export default function PlaceCard({
   destinationId,
@@ -33,10 +34,10 @@ export default function PlaceCard({
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(initialLikes || 0);
   const [detailOpen, setDetailOpen] = useState(false);
+  const { token, user } = useUser();
 
   useEffect(() => {
     const fetchFavorite = async () => {
-      const token = localStorage.getItem("token");
       if (!token) return;
 
       try {
@@ -60,7 +61,6 @@ export default function PlaceCard({
 
   const toggleFavorite = async (e) => {
     e.stopPropagation(); // Prevent card click when clicking favorite icon
-    const token = localStorage.getItem("token");
 
     if (!token) {
       alert("Please log in to add or remove favorites.");
@@ -229,7 +229,6 @@ export default function PlaceCard({
             >
               {description}
             </Typography>
-            {/* Removed the clickable 'see more...' since the whole card is clickable */}
           </Box>
         </Box>
 

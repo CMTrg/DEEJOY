@@ -49,26 +49,39 @@ export default function Home() {
   }, [lat, lng]);
 
   const handleSearch = async (searchTerm) => {
-    if (!searchTerm.trim()) return;
+  const trimmed = searchTerm.trim();
 
-    if (lat === null || lng === null) {
-      alert("Please provide a location.");
-      return;
-    }
-
+  if (!trimmed) {
+    // 🔁 Fetch random again
     try {
-      const res = await api.get("/destinations/search", {
-        params: { query: searchTerm, lat, lng },
+      const res = await api.get("/destinations/explore/random", {
+        params: { lat, lng },
       });
       const uniquePlaces = Array.from(
-        new Map(res.data.map(p => [(p._id || p.foursquareId), p])).values()
+        new Map(res.data.places.map(p => [(p._id || p.foursquareId), p])).values()
       );
       setPlaces(uniquePlaces);
       setCurrentPage(1);
     } catch (err) {
-      console.error("Search failed:", err);
+      console.error("Random fetch failed:", err);
     }
-  };
+    return;
+  }
+
+  // Normal search
+  try {
+    const res = await api.get("/destinations/search", {
+      params: { query: trimmed, lat, lng },
+    });
+    const uniquePlaces = Array.from(
+      new Map(res.data.map(p => [(p._id || p.foursquareId), p])).values()
+    );
+    setPlaces(uniquePlaces);
+    setCurrentPage(1);
+  } catch (err) {
+    console.error("Search failed:", err);
+  }
+};
 
   const handleCategorySelect = async (category) => {
     if (lat === null || lng === null) {
