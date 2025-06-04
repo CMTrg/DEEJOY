@@ -21,6 +21,9 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const placesPerPage = 8;
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [likedState, setLikedState] = useState({});
+
 
   const lat = manualLatLng?.lat ?? contextLat;
   const lng = manualLatLng?.lng ?? contextLng;
@@ -49,39 +52,39 @@ export default function Home() {
   }, [lat, lng]);
 
   const handleSearch = async (searchTerm) => {
-  const trimmed = searchTerm.trim();
+    const trimmed = searchTerm.trim();
 
-  if (!trimmed) {
-    // 🔁 Fetch random again
+    if (!trimmed) {
+
+      try {
+        const res = await api.get("/destinations/explore/random", {
+          params: { lat, lng },
+        });
+        const uniquePlaces = Array.from(
+          new Map(res.data.places.map(p => [(p._id || p.foursquareId), p])).values()
+        );
+        setPlaces(uniquePlaces);
+        setCurrentPage(1);
+      } catch (err) {
+        console.error("Random fetch failed:", err);
+      }
+      return;
+    }
+
+    // Normal search
     try {
-      const res = await api.get("/destinations/explore/random", {
-        params: { lat, lng },
+      const res = await api.get("/destinations/search", {
+        params: { query: trimmed, lat, lng },
       });
       const uniquePlaces = Array.from(
-        new Map(res.data.places.map(p => [(p._id || p.foursquareId), p])).values()
+        new Map(res.data.map(p => [(p._id || p.foursquareId), p])).values()
       );
       setPlaces(uniquePlaces);
       setCurrentPage(1);
     } catch (err) {
-      console.error("Random fetch failed:", err);
+      console.error("Search failed:", err);
     }
-    return;
-  }
-
-  // Normal search
-  try {
-    const res = await api.get("/destinations/search", {
-      params: { query: trimmed, lat, lng },
-    });
-    const uniquePlaces = Array.from(
-      new Map(res.data.map(p => [(p._id || p.foursquareId), p])).values()
-    );
-    setPlaces(uniquePlaces);
-    setCurrentPage(1);
-  } catch (err) {
-    console.error("Search failed:", err);
-  }
-};
+  };
 
   const handleCategorySelect = async (category) => {
     if (lat === null || lng === null) {
@@ -99,12 +102,23 @@ export default function Home() {
         );
         setPlaces(uniquePlaces);
         setCurrentPage(1);
+        setSelectedCategory(category);
       } else {
         console.warn("Unexpected category response", res.data);
       }
     } catch (err) {
       console.error("Failed to fetch by category", err);
     }
+  };
+
+  const handleToggleLike = (destinationId, isLiked) => {
+    setLikedState((prev) => ({
+      ...prev,
+      [destinationId]: {
+        liked: !isLiked,
+        count: (prev[destinationId]?.count || 0) + (isLiked ? -1 : 1),
+      },
+    }));
   };
 
   const indexOfLastPlace = currentPage * placesPerPage;
@@ -178,7 +192,7 @@ export default function Home() {
             letterSpacing: "0.2rem",
           }}
         >
-          RANDOM
+          {selectedCategory?.toUpperCase() || "RANDOM"}
         </Typography>
 
 
@@ -226,9 +240,20 @@ export default function Home() {
                   address={place.address || "Address unavailable"}
                   rating={place.rating || 0}
                   description={`Category: ${place.category || "Unknown"}`}
-                  likes={place.favoritesCount || "0"}
+                  likes={
+                    likedState[place._id || place.foursquareId]?.count ??
+                    place.favoritesCount ??
+                    "0"
+                  }
                   shares={place.sharedCount || "0"}
                   comments={place.reviewCount || "0"}
+                  isLiked={likedState[place._id || place.foursquareId]?.liked ?? false}
+                  onToggleLike={() =>
+                    handleToggleLike(
+                      place._id || place.foursquareId,
+                      likedState[place._id || place.foursquareId]?.liked ?? false
+                    )
+                  }
                   onClick={handlePlaceClick}
                 />
               ))}
