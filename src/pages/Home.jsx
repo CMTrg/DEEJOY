@@ -62,6 +62,7 @@ export default function Home() {
         const uniquePlaces = Array.from(
           new Map(res.data.places.map(p => [(p._id || p.foursquareId), p])).values()
         );
+        setSelectedCategory(null);
         setPlaces(uniquePlaces);
         setCurrentPage(1);
       } catch (err) {
