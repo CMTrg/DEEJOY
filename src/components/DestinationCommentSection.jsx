@@ -7,11 +7,13 @@ import {
   Stack,
   Rating,
 } from "@mui/material";
-import api from "../api/api";
+import api from "../api/api"; 
+import { useUser } from "../UserContext";
 
 export default function DestinationCommentSection({ destinationId, refreshTrigger }) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const {user} = useUser();
 
   const fetchComments = useCallback(async () => {
     if (!destinationId) return;
@@ -63,7 +65,7 @@ export default function DestinationCommentSection({ destinationId, refreshTrigge
             boxShadow: 1,
           }}
         >
-          <Avatar src={comment.user?.avatar} alt={comment.user?.username}>
+          <Avatar src={comment.user?user.profilePicture:`http://localhost:4000/${user.profilePicture}`} alt={comment.user?.username}>
             {comment.user?.username?.[0]?.toUpperCase() || "U"}
           </Avatar>
           <Box flex={1}>
