@@ -1,8 +1,8 @@
-import { 
+import {
   Box,
   Typography,
   Pagination,
-  CircularProgress
+  CircularProgress,
 } from "@mui/material";
 import Navbar from "../components/Navbar.jsx";
 import AnimatedBackground from "../components/AnimatedBackground.jsx";
@@ -13,6 +13,7 @@ import Footer from "../components/Footer.jsx";
 import { useEffect, useState } from "react";
 import api from "../api/api";
 import { useLocation } from "../LocationContext";
+import { useUser } from "../UserContext";
 
 export default function Home() {
   const { lat: contextLat, lng: contextLng } = useLocation();
@@ -22,8 +23,7 @@ export default function Home() {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const placesPerPage = 8;
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [likedState, setLikedState] = useState({});
-
+  const { token } = useUser();
 
   const lat = manualLatLng?.lat ?? contextLat;
   const lng = manualLatLng?.lng ?? contextLng;
@@ -55,7 +55,6 @@ export default function Home() {
     const trimmed = searchTerm.trim();
 
     if (!trimmed) {
-
       try {
         const res = await api.get("/destinations/explore/random", {
           params: { lat, lng },
@@ -71,7 +70,6 @@ export default function Home() {
       return;
     }
 
-    // Normal search
     try {
       const res = await api.get("/destinations/search", {
         params: { query: trimmed, lat, lng },
@@ -109,16 +107,6 @@ export default function Home() {
     } catch (err) {
       console.error("Failed to fetch by category", err);
     }
-  };
-
-  const handleToggleLike = (destinationId, isLiked) => {
-    setLikedState((prev) => ({
-      ...prev,
-      [destinationId]: {
-        liked: !isLiked,
-        count: (prev[destinationId]?.count || 0) + (isLiked ? -1 : 1),
-      },
-    }));
   };
 
   const indexOfLastPlace = currentPage * placesPerPage;
@@ -195,7 +183,6 @@ export default function Home() {
           {selectedCategory?.toUpperCase() || "RANDOM"}
         </Typography>
 
-
         {places.length === 0 ? (
           <Box
             sx={{
@@ -234,27 +221,16 @@ export default function Home() {
               {currentPlaces.map((place) => (
                 <PlaceCard
                   key={place._id || place.foursquareId}
-                  destinationId={place._id}
+                  destinationId={place._id || place.foursquareId}
                   image={place.images?.[0]}
                   title={place.name}
                   address={place.address || "Address unavailable"}
                   rating={place.rating || 0}
                   description={`Category: ${place.category || "Unknown"}`}
-                  likes={
-                    likedState[place._id || place.foursquareId]?.count ??
-                    place.favoritesCount ??
-                    "0"
-                  }
+                  initialLikes={place.favoritesCount ?? 0}
                   shares={place.sharedCount || "0"}
                   comments={place.reviewCount || "0"}
-                  isLiked={likedState[place._id || place.foursquareId]?.liked ?? false}
-                  onToggleLike={() =>
-                    handleToggleLike(
-                      place._id || place.foursquareId,
-                      likedState[place._id || place.foursquareId]?.liked ?? false
-                    )
-                  }
-                  onClick={handlePlaceClick}
+                  onClick={() => handlePlaceClick(place)}
                 />
               ))}
             </Box>

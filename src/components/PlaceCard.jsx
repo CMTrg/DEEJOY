@@ -8,15 +8,15 @@ import {
   Avatar,
   IconButton,
 } from "@mui/material";
-import PlaceDetailOverlay from "../components/PlaceDetailOverlay.jsx";
+import PlaceDetailOverlay from "./PlaceDetailOverlay.jsx";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShareIcon from "@mui/icons-material/Share";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import StarIcon from "@mui/icons-material/Star";
 import { useEffect, useState } from "react";
-import api from "../api/api";
 import { useUser } from "../UserContext";
+import api from "../api/api";
 
 export default function PlaceCard({
   destinationId,
@@ -30,40 +30,39 @@ export default function PlaceCard({
   comments,
   initialLikes,
   onAttemptRemove,
+  onClick,
 }) {
-  const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(initialLikes || 0);
   const [detailOpen, setDetailOpen] = useState(false);
-  const { token, user } = useUser();
+  const { token, likedState, setLikedState } = useUser();
+  const liked = likedState[destinationId]?.liked || false;
 
   useEffect(() => {
-    const fetchFavorite = async () => {
+    const fetchStatus = async () => {
       if (!token) return;
-
       try {
-        const res = await api.get("/favorites", {
+        const res = await api.get(`/favorites/status?destinationId=${destinationId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        const isFavorite = res.data.some((fav) => {
-          const id = fav.destinationId._id || fav.destinationId;
-          return id === destinationId;
-        });
-
-        setLiked(isFavorite);
+        setLikedState((prev) => ({
+          ...prev,
+          [destinationId]: { liked: res.data.liked },
+        }));
       } catch (err) {
-        console.error("Failed to fetch favorites:", err);
+        console.error("Error fetching like status:", err);
       }
     };
 
-    if (userId) fetchFavorite();
-  }, [destinationId, userId]);
+    if (!(destinationId in likedState)) {
+      fetchStatus();
+    }
+  }, [token, destinationId, likedState, setLikedState]);
 
   const toggleFavorite = async (e) => {
-    e.stopPropagation(); // Prevent card click when clicking favorite icon
+    e.stopPropagation();
 
     if (!token) {
-      alert("Please log in to add or remove favorites.");
+      alert("Please log in to like this place.");
       return;
     }
 
@@ -82,11 +81,17 @@ export default function PlaceCard({
           ...config,
           data: { destinationId },
         });
-        setLiked(false);
+        setLikedState((prev) => ({
+          ...prev,
+          [destinationId]: { liked: false },
+        }));
         setLikeCount((prev) => prev - 1);
       } else {
         await api.post("/favorites", { destinationId }, config);
-        setLiked(true);
+        setLikedState((prev) => ({
+          ...prev,
+          [destinationId]: { liked: true },
+        }));
         setLikeCount((prev) => prev + 1);
       }
     } catch (err) {
@@ -94,7 +99,11 @@ export default function PlaceCard({
     }
   };
 
-  const openDetails = () => setDetailOpen(true);
+  const openDetails = () => {
+    onClick?.();
+    setDetailOpen(true);
+  };
+
   const closeDetails = () => setDetailOpen(false);
 
   return (
@@ -149,6 +158,7 @@ export default function PlaceCard({
 
         <CardContent
           sx={{
+            px: 1,
             pb: 0.5,
             width: "100%",
             display: "flex",
@@ -160,47 +170,59 @@ export default function PlaceCard({
             variant="subtitle1"
             fontWeight="800"
             color="text.primary"
-            sx={{ fontFamily: "Outfit", width: "80%" }}
+            sx={{
+              fontFamily: "Outfit",
+              width: "100%",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+            }}
           >
             {title}
           </Typography>
           <Typography
             variant="body2"
             color="text.secondary"
-            sx={{ fontFamily: "Outfit", mb: 1 }}
+            sx={{
+              fontFamily: "Outfit",
+              mb: 1,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
           >
             {address}
           </Typography>
         </CardContent>
 
         <Box sx={{ position: "relative", width: "90%" }}>
-          <Box sx={{ position: "relative", width: "100%", height: "auto" }}>
-            <CardMedia
-              component="img"
-              image={image}
-              alt={title}
-              sx={{
-                width: "100%",
-                height: 140,
-                objectFit: "cover",
-                borderRadius: "10px",
-              }}
-            />
-            <Avatar
-              sx={{
-                position: "absolute",
-                bottom: 8,
-                left: 8,
-                width: 24,
-                height: 24,
-                bgcolor: "white",
-                color: "primary.main",
-                fontSize: 12,
-              }}
-            >
-              NT
-            </Avatar>
-          </Box>
+          <CardMedia
+            component="img"
+            image={image}
+            alt={title}
+            sx={{
+              width: "100%",
+              height: 140,
+              objectFit: "cover",
+              borderRadius: "10px",
+            }}
+          />
+          <Avatar
+            sx={{
+              position: "absolute",
+              bottom: 8,
+              left: 8,
+              width: 24,
+              height: 24,
+              bgcolor: "white",
+              color: "primary.main",
+              fontSize: 12,
+            }}
+          >
+            NT
+          </Avatar>
 
           <Box
             sx={{
@@ -258,7 +280,6 @@ export default function PlaceCard({
         </Stack>
       </Card>
 
-      {/* Place detail overlay */}
       {detailOpen && (
         <PlaceDetailOverlay
           data={{

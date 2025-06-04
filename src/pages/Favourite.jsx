@@ -13,10 +13,10 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AnimatedBackground from "../components/AnimatedBackground";
 
-import { useUser } from "../UserContext";  
+import { useUser } from "../UserContext";
 
 export default function Favorite() {
-  const { user, token } = useUser(); 
+  const { token } = useUser();
   const [favorites, setFavorites] = useState([]);
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
@@ -37,7 +37,7 @@ export default function Favorite() {
 
   useEffect(() => {
     fetchFavorites();
-  }, [token]); // refetch when token changes
+  }, [token]);
 
   const handleRemoveRequest = (destinationId) => {
     setConfirmDialog({ open: true, destinationId });

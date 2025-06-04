@@ -9,6 +9,8 @@ const UserContext = createContext(null);
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
+  const [likedState, setLikedState] = useState({});
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,7 +62,9 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, token, setToken, fetchUser, handleLogin, handleLogout }}>
+    <UserContext.Provider value={{ user, setUser, token, setToken, fetchUser, handleLogin, handleLogout,
+      likedState, setLikedState
+    }}>
       {children}
     </UserContext.Provider>
   );
